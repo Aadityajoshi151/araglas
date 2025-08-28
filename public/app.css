@@ -255,3 +255,24 @@ body{
   align-items: center;
   margin-bottom: 18px;
 }
+.circle-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(124,240,255,.12);
+  border: 1px solid rgba(124,240,255,.25);
+  color: var(--brand);
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 12px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.circle-btn:hover {
+  background: var(--brand);
+  color: var(--card);
+  box-shadow: 0 2px 12px rgba(124,240,255,0.18);
+}

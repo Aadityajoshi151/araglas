@@ -132,7 +132,11 @@ function renderLayout(content){
         tab("Stats", location.hash.startsWith("#/stats"), () => location.hash = "#/stats")
       ),
       h("div", { style: "flex:1" }), // spacer to push button to end
-      h("div", { class: "pill", onclick: cleanupThumbs, title: "Remove thumbnails for deleted videos" }, "Clean Thumbnails")
+      h("button", {
+        class: "circle-btn",
+        onclick: cleanupThumbs,
+        title: "Remove thumbnails for deleted videos"
+      }, "C")
     ),
     content
   );
