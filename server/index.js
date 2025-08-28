@@ -166,7 +166,7 @@ app.post("/api/cleanup-thumbs", async (req, res) => {
       let found = false;
       for (const channel of LIB.channels) {
         for (const video of channel.videos) {
-          if (file === `${require('./utils.js').hashPath(video.relPath)}.jpg`) {
+          if (file === `${hashPath(video.relPath)}.jpg`) {
             found = true;
             break;
           }
