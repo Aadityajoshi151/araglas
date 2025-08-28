@@ -2,10 +2,11 @@
 const routes = {
   "": renderHome,
   "#/": renderHome,
-  "#/channels": renderChannels, // <-- add this
+  "#/channels": renderChannels,
   "#/channel": renderChannel,
   "#/search": renderSearch,
-  "#/favorites": renderFavorites
+  "#/favorites": renderFavorites,
+  "#/stats": renderStats // <-- Add this
 };
 
 const state = {
@@ -127,7 +128,8 @@ function renderLayout(content){
     h("div", { class: "tabs" },
       tab("Home", ["", "#/"].includes(location.hash), () => location.hash = "#/"),
       tab("Channels", location.hash.startsWith("#/channels"), () => location.hash = "#/channels"),
-      tab("Favorites", location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites")
+      tab("Favorites", location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites"),
+      tab("Stats", location.hash.startsWith("#/stats"), () => location.hash = "#/stats") // <-- Add this
     ),
     content
   );
@@ -260,6 +262,20 @@ async function renderChannels() {
       h("div", { class: "notice" }, "Channels"),
       data.data.length ? grid : h("div", { class: "notice" }, "No channels found."),
       pagination(data, (p)=>{ location.hash = `#/channels?page=${p}&pageSize=${pageSize}&q=${encodeURIComponent(q)}`; })
+    )
+  );
+}
+
+async function renderStats() {
+  const stats = await api("/api/stats");
+  renderLayout(
+    h("div", { class: "stats-page" },
+      h("h2", {}, "Library Stats"),
+      h("div", { class: "stats-list" },
+        h("div", {}, `Channels: ${stats.channels}`),
+        h("div", {}, `Videos: ${stats.videos}`),
+        h("div", {}, `Total Size: ${fmtSize(stats.totalSize)}`)
+      )
     )
   );
 }

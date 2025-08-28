@@ -230,6 +230,18 @@ app.delete("/api/favorites", express.json(), async (req, res) => {
   res.json({ ok: true });
 });
 
+// --- API: stats ---
+app.get("/api/stats", (req, res) => {
+  const numChannels = LIB.channels.length;
+  const numVideos = LIB.channels.reduce((sum, c) => sum + c.videos.length, 0);
+  const totalSize = LIB.channels.reduce((sum, c) => sum + c.videos.reduce((s, v) => s + (v.size || 0), 0), 0);
+  res.json({
+    channels: numChannels,
+    videos: numVideos,
+    totalSize
+  });
+});
+
 // Fallback to SPA
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));
