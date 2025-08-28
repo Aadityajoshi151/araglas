@@ -119,10 +119,10 @@ function tab(label, active, onClick){
 
 // --- pages ---
 async function renderHome() {
-  const url = new URL(location.href);
-  const page = Number(url.searchParams.get("page") || 1);
-  const pageSize = Number(url.searchParams.get("pageSize") || 8);
-  const q = url.searchParams.get("q") || "";
+  const params = parseHashParams();
+  const page = Number(params.page || 1);
+  const pageSize = Number(params.pageSize || 8);
+  const q = params.q || "";
 
   const data = await api(`/api/channels?page=${page}&pageSize=${pageSize}&q=${encodeURIComponent(q)}`);
   const grid = h("div", { class: "grid" },
