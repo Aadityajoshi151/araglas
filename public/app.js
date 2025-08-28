@@ -79,6 +79,10 @@ function renderLayout(content){
           oninput: (e)=> { state.query = e.target.value; },
           onkeydown: (e)=>{
             if (e.key === "Enter") {
+              if (!state.query.trim()) {
+                alert("Please enter a search query.");
+                return;
+              }
               location.hash = `#/search?q=${encodeURIComponent(state.query)}&page=1`;
             }
           }
