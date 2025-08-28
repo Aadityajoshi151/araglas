@@ -276,16 +276,27 @@ function svgHeart(filled = false) {
 function cardVideo(v, onPlay) {
   const favKey = JSON.stringify({ relPath: v.relPath, name: v.name, channel: v.channel });
   const isFav = state.favorites.has(favKey);
+
+  // Truncate title if longer than 25 chars
+  const showTitle = v.name.length > 25 ? v.name.slice(0, 22) + "..." : v.name;
+
+  // Info line: channel | date
+  const infoLine = [
+    v.channel || "",
+    v.mtime ? fmtDate(v.mtime) : ""
+  ].filter(Boolean).join(" | ");
+
   return h("div", { class: "card" },
     h("img", {
-  class: "thumb lazy",
-  "data-src": videoThumb(v.relPath),
-  alt: v.name,
-  onclick: onPlay
-}),
+      class: "thumb lazy",
+      "data-src": videoThumb(v.relPath),
+      alt: v.name,
+      onclick: onPlay
+    }),
     h("div", { class: "card-body" },
-      h("div", { class: "card-title" }, v.name),
-      h("div", { class: "card-sub" }, v.channel ? v.channel : ""),
+      h("div", { class: "card-title", title: v.name }, showTitle),
+      h("div", { class: "card-sub" }, infoLine),
+      h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
       h("button", {
         class: `icon-btn fav-btn`,
         onclick: (e) => toggleFav(e, favKey),

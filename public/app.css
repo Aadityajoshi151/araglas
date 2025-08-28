@@ -97,12 +97,13 @@ body{
 
 .card-title {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.95rem; /* slightly smaller */
   margin-bottom: 2px;
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 100%;
 }
 
 .card-sub {
@@ -111,6 +112,13 @@ body{
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.card-size {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 .icon-btn.fav-btn {
