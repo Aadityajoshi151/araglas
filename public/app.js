@@ -121,15 +121,18 @@ function renderLayout(content){
               location.hash = `#/search?q=${encodeURIComponent(state.query)}&page=1`;
             }
           }
-        }),
-        h("div", { class: "pill", onclick: cleanupThumbs }, "Clean Thumbnails")
+        })
       )
     ),
-    h("div", { class: "tabs" },
-      tab("Home", ["", "#/"].includes(location.hash), () => location.hash = "#/"),
-      tab("Channels", location.hash.startsWith("#/channels"), () => location.hash = "#/channels"),
-      tab("Favorites", location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites"),
-      tab("Stats", location.hash.startsWith("#/stats"), () => location.hash = "#/stats") // <-- Add this
+    h("div", { class: "tabs-row" },
+      h("div", { class: "tabs" },
+        tab("Home", ["", "#/"].includes(location.hash), () => location.hash = "#/"),
+        tab("Channels", location.hash.startsWith("#/channels"), () => location.hash = "#/channels"),
+        tab("Favorites", location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites"),
+        tab("Stats", location.hash.startsWith("#/stats"), () => location.hash = "#/stats")
+      ),
+      h("div", { style: "flex:1" }), // spacer to push button to end
+      h("div", { class: "pill", onclick: cleanupThumbs, title: "Remove thumbnails for deleted videos" }, "Clean Thumbnails")
     ),
     content
   );

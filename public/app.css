@@ -250,3 +250,8 @@ body{
   margin: 14px 0;
   color: var(--text);
 }
+.tabs-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+}
