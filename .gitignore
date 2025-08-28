@@ -1,6 +1,7 @@
 /node_modules
 /videos
 /server/thumbs
+favorites.json
 .DS_Store
 .env
 thumbs.db

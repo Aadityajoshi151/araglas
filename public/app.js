@@ -13,15 +13,49 @@ const state = {
   page: 1,
   pageSize: 8,
   currentChannelId: null,
-  favorites: loadFavs()
+  favorites: [] // now an array
 };
 
-function loadFavs() {
-  try { return new Set(JSON.parse(localStorage.getItem("favorites") || "[]")); }
-  catch { return new Set(); }
+// Load favorites from API
+async function loadFavs() {
+  try {
+    const favs = await api("/api/favorites");
+    state.favorites = favs;
+  } catch {
+    state.favorites = [];
+  }
 }
-function saveFavs() {
-  localStorage.setItem("favorites", JSON.stringify([...state.favorites]));
+
+// Add favorite via API
+async function addFav(item) {
+  await fetch("/api/favorites", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(item)
+  });
+  await loadFavs();
+}
+
+// Remove favorite via API
+async function removeFav(relPath) {
+  await fetch("/api/favorites", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ relPath })
+  });
+  await loadFavs();
+}
+
+// Toggle favorite
+async function toggleFav(e, item) {
+  e.preventDefault(); e.stopPropagation();
+  const isFav = state.favorites.some(f => f.relPath === item.relPath);
+  if (isFav) {
+    await removeFav(item.relPath);
+  } else {
+    await addFav(item);
+  }
+  onRoute();
 }
 
 // --- utils ---
@@ -197,11 +231,11 @@ async function renderSearch() {
 }
 
 async function renderFavorites() {
-  const favList = [...state.favorites].map(JSON.parse); // each fav is {relPath,name,channel}
+  await loadFavs();
+  const favList = state.favorites;
   if (!favList.length) {
-    return renderLayout(h("div", { class: "notice" }, "No favorites yet. Click the ★ on any video."));
+    return renderLayout(h("div", { class: "notice" }, "No favorites yet."));
   }
-  // Make cards; we won't repaginate client-side for simplicity
   const grid = h("div", { class: "grid" },
     favList.map(item => cardVideo(item, () => openPlayer(videoUrl(item.relPath), item.name, item.channel)))
   );
@@ -276,8 +310,7 @@ function svgHeart(filled = false) {
 }
 
 function cardVideo(v, onPlay) {
-  const favKey = JSON.stringify({ relPath: v.relPath, name: v.name, channel: v.channel });
-  const isFav = state.favorites.has(favKey);
+  const isFav = state.favorites.some(f => f.relPath === v.relPath);
 
   // Truncate title if longer than 25 chars
   const showTitle = v.name.length > 25 ? v.name.slice(0, 22) + "..." : v.name;
@@ -301,9 +334,9 @@ function cardVideo(v, onPlay) {
       h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
       h("button", {
         class: `icon-btn fav-btn`,
-        onclick: (e) => toggleFav(e, favKey),
+        onclick: (e) => toggleFav(e, v),
         title: isFav ? "Unfavorite" : "Favorite"
-      }, svgHeart(isFav))
+      }, isFav ? "Unfavorite" : "Favorite")
     )
   );
 }
@@ -346,16 +379,6 @@ function pagination(meta, onPage){
     btn("Next ›", Math.min(meta.totalPages, meta.page+1), meta.page === meta.totalPages),
     btn("Last »", meta.totalPages, meta.page === meta.totalPages)
   );
-}
-
-// --- favorites ---
-function toggleFav(e, key){
-  e.preventDefault(); e.stopPropagation();
-  if (state.favorites.has(key)) state.favorites.delete(key);
-  else state.favorites.add(key);
-  saveFavs();
-  // refresh current view (cheap way)
-  onRoute();
 }
 
 // --- lazy thumbnails ---

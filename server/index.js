@@ -184,6 +184,52 @@ app.post("/api/cleanup-thumbs", async (req, res) => {
   }
 });
 
+// ----- Favorites -----
+const FAVORITES_FILE = path.join(__dirname, "favorites.json");
+
+// Helper to read favorites
+async function readFavorites() {
+  try {
+    const favs = await fs.readJson(FAVORITES_FILE);
+    return Array.isArray(favs) ? favs : [];
+  } catch {
+    return [];
+  }
+}
+
+// Helper to write favorites
+async function writeFavorites(favs) {
+  await fs.writeJson(FAVORITES_FILE, favs, { spaces: 2 });
+}
+
+// Get all favorites
+app.get("/api/favorites", async (req, res) => {
+  const favs = await readFavorites();
+  res.json(favs);
+});
+
+// Add a favorite
+app.post("/api/favorites", express.json(), async (req, res) => {
+  const fav = req.body;
+  if (!fav || !fav.relPath) return res.status(400).json({ error: "Missing relPath" });
+  let favs = await readFavorites();
+  if (!favs.find(f => f.relPath === fav.relPath)) {
+    favs.push(fav);
+    await writeFavorites(favs);
+  }
+  res.json({ ok: true });
+});
+
+// Remove a favorite
+app.delete("/api/favorites", express.json(), async (req, res) => {
+  const { relPath } = req.body;
+  if (!relPath) return res.status(400).json({ error: "Missing relPath" });
+  let favs = await readFavorites();
+  favs = favs.filter(f => f.relPath !== relPath);
+  await writeFavorites(favs);
+  res.json({ ok: true });
+});
+
 // Fallback to SPA
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));
