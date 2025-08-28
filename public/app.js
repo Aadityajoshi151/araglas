@@ -232,12 +232,10 @@ async function renderChannels() {
 
 // --- UI components ---
 function cardChannel(c, onClick) {
-  return h("div", { class: "card", onclick: onClick },
-    h("img", { class: "thumb lazy", "data-src": channelCover(c.coverRelPath), alt: c.name }),
-    h("div", { class: "card-body" },
-      h("div", { class: "card-title" }, c.name),
-      h("div", { class: "card-sub" }, `${c.count} video${c.count !== 1 ? "s":""}`)
-    )
+  return h("div", { class: "channel-card", onclick: onClick },
+    //h("img", { class: "channel-thumb lazy", "data-src": channelCover(c.coverRelPath)}),
+    h("div", { class: "channel-title" }, c.name),
+    h("div", { class: "channel-sub" }, `${c.count} video${c.count !== 1 ? "s":""}`)
   );
 }
 
