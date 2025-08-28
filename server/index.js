@@ -242,6 +242,17 @@ app.get("/api/stats", (req, res) => {
   });
 });
 
+// --- API: manual rescan ---
+app.post("/api/rescan", async (req, res) => {
+  try {
+    await rescan();
+    console.log("[manual] Library rescan triggered by user.");
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Fallback to SPA
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));

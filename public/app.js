@@ -131,17 +131,39 @@ function renderLayout(content){
         tab("Favorites", location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites"),
         tab("Stats", location.hash.startsWith("#/stats"), () => location.hash = "#/stats")
       ),
-      h("div", { style: "flex:1" }), // spacer to push button to end
+      h("div", { style: "flex:1" }), // spacer to push buttons to end
       h("button", {
         class: "circle-btn",
         onclick: cleanupThumbs,
         title: "Remove thumbnails for deleted videos"
-      }, "C")
+      }, "C"),
+      h("button", {
+        class: "circle-btn",
+        onclick: manualRescan,
+        title: "Rescan library"
+      }, "R")
     ),
     content
   );
   app.append(container);
   ensurePlayer();
+}
+
+// Add this function to trigger manual rescan
+async function manualRescan() {
+  try {
+    const res = await fetch("/api/rescan", { method: "POST" });
+    const data = await res.json();
+    if (data.ok) {
+      alert("Library rescan complete.");
+      console.log("Manual rescan triggered.");
+      onRoute(); // Optionally refresh UI
+    } else {
+      alert("Rescan failed: " + (data.error || "Unknown error"));
+    }
+  } catch (err) {
+    alert("Rescan failed: " + err.message);
+  }
 }
 
 async function cleanupThumbs() {
