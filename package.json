@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "start:dev": "NODE_ENV=development node server/index.js",
+    "dev": "nodemon server/index.js",
     "rescan": "node server/index.js --rescan"
   },
   "dependencies": {
@@ -17,5 +17,8 @@
     "morgan": "^1.10.0",
     "piscina": "^4.6.1",
     "sanitize-filename": "^1.6.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }

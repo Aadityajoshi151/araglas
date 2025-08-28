@@ -74,7 +74,7 @@ function renderLayout(content){
       ),
       h("div", { class: "searchbar" },
         h("input", {
-          placeholder: "Search videos or channels…",
+          placeholder: "Search videos…",
           value: state.query,
           oninput: (e)=> { state.query = e.target.value; },
           onkeydown: (e)=>{
