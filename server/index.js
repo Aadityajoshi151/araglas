@@ -259,7 +259,7 @@ app.get("*", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Local YouTube running on http://localhost:${PORT}`);
+  console.log(`Araglas running on http://localhost:${PORT}`);
   console.log(`Library: ${LIBRARY_DIR}`);
   console.log(`Thumbnails: ${THUMBS_DIR}`);
 });

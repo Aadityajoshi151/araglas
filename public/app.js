@@ -105,7 +105,7 @@ function renderLayout(content){
     h("div", { class: "header" },
       h("div", { class: "brand" },
         h("div", { class: "logo" }),
-        h("div", {}, "Local YouTube")
+        h("div", {}, "Araglas")
       ),
       h("div", { class: "searchbar" },
         h("input", {

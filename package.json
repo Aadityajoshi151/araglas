@@ -1,7 +1,7 @@
 {
-  "name": "local-youtube",
+  "name": "araglas",
   "version": "1.0.0",
-  "description": "Self-hosted local YouTube for your video library",
+  "description": "Self-hosted library for your downloaded YouTube videos",
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
