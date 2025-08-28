@@ -2,6 +2,7 @@
 const routes = {
   "": renderHome,
   "#/": renderHome,
+  "#/channels": renderChannels, // <-- add this
   "#/channel": renderChannel,
   "#/search": renderSearch,
   "#/favorites": renderFavorites
@@ -82,11 +83,12 @@ function renderLayout(content){
             }
           }
         }),
-        h("div", { class: "pill", onclick: cleanupThumbs ,}, "Clean Thumbnails")
+        h("div", { class: "pill", onclick: cleanupThumbs }, "Clean Thumbnails")
       )
     ),
     h("div", { class: "tabs" },
-      tab("Channels", ["", "#/"].includes(location.hash), () => location.hash = "#/"),
+      tab("Home", ["", "#/"].includes(location.hash), () => location.hash = "#/"),
+      tab("Channels", location.hash.startsWith("#/channels"), () => location.hash = "#/channels"),
       tab("Favorites", location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites")
     ),
     content
@@ -121,21 +123,22 @@ function tab(label, active, onClick){
 async function renderHome() {
   const params = parseHashParams();
   const page = Number(params.page || 1);
-  const pageSize = Number(params.pageSize || 8);
-  const q = params.q || "";
+  const pageSize = Number(params.pageSize || 16);
 
-  const data = await api(`/api/channels?page=${page}&pageSize=${pageSize}&q=${encodeURIComponent(q)}`);
+  // Fetch all videos, sorted by date (like empty search)
+  const data = await api(`/api/search?q=&page=${page}&pageSize=${pageSize}`);
+  const videos = data.data || []; // Defensive: fallback to empty array
   const grid = h("div", { class: "grid" },
-    data.data.map(c =>
-      cardChannel(c, ()=> location.hash = `#/channel?id=${encodeURIComponent(c.id)}&name=${encodeURIComponent(c.name)}`)
-    )
+    videos.map(v => cardVideo(v, () => openPlayer(videoUrl(v.relPath), v.name, v.channel)))
   );
   renderLayout(
     h("div", {},
-      data.data.length ? grid : h("div", { class: "notice" }, "No channels found."),
-      pagination(data, (p)=>{ location.hash = `#/?page=${p}&pageSize=${pageSize}&q=${encodeURIComponent(q)}`; })
+      h("div", { class: "notice" }, "Latest Videos"),
+      videos.length ? grid : h("div", { class: "notice" }, "No videos found."),
+      pagination(data, (p)=>{ location.hash = `#/?page=${p}&pageSize=${pageSize}`; })
     )
   );
+  lazyThumbs(); // <-- Add this line
 }
 
 function parseHashParams() {
@@ -149,7 +152,7 @@ async function renderChannel() {
   const id = params.id;
   const name = params.name || id;
   const page = Number(params.page || 1);
-  const pageSize = Number(params.pageSize || 10);
+  const pageSize = Number(params.pageSize || 12);
   const q = params.q || "";
 
   state.currentChannelId = id;
@@ -200,6 +203,27 @@ async function renderFavorites() {
   );
   renderLayout(grid);
   lazyThumbs();
+}
+
+async function renderChannels() {
+  const params = parseHashParams();
+  const page = Number(params.page || 1);
+  const pageSize = Number(params.pageSize || 12);
+  const q = params.q || "";
+
+  const data = await api(`/api/channels?page=${page}&pageSize=${pageSize}&q=${encodeURIComponent(q)}`);
+  const grid = h("div", { class: "grid" },
+    data.data.map(c =>
+      cardChannel(c, ()=> location.hash = `#/channel?id=${encodeURIComponent(c.id)}&name=${encodeURIComponent(c.name)}`)
+    )
+  );
+  renderLayout(
+    h("div", {},
+      h("div", { class: "notice" }, "Channels"),
+      data.data.length ? grid : h("div", { class: "notice" }, "No channels found."),
+      pagination(data, (p)=>{ location.hash = `#/channels?page=${p}&pageSize=${pageSize}&q=${encodeURIComponent(q)}`; })
+    )
+  );
 }
 
 // --- UI components ---
@@ -254,11 +278,11 @@ function cardVideo(v, onPlay) {
   const isFav = state.favorites.has(favKey);
   return h("div", { class: "card" },
     h("img", {
-      class: "thumb lazy",
-      "data-src": videoThumb(v.relPath),
-      alt: v.name,
-      onclick: onPlay
-    }),
+  class: "thumb lazy",
+  "data-src": videoThumb(v.relPath),
+  alt: v.name,
+  onclick: onPlay
+}),
     h("div", { class: "card-body" },
       h("div", { class: "card-title" }, v.name),
       h("div", { class: "card-sub" }, v.channel ? v.channel : ""),
