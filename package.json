@@ -1,0 +1,21 @@
+{
+  "name": "local-youtube",
+  "version": "1.0.0",
+  "description": "Self-hosted local YouTube for your video library",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "start:dev": "NODE_ENV=development node server/index.js",
+    "rescan": "node server/index.js --rescan"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "express": "^4.19.2",
+    "fast-glob": "^3.3.2",
+    "fs-extra": "^11.2.0",
+    "mime": "^4.0.3",
+    "morgan": "^1.10.0",
+    "piscina": "^4.6.1",
+    "sanitize-filename": "^1.6.3"
+  }
+}

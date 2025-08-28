@@ -1,0 +1,14 @@
+/node_modules
+/videos
+/server/thumbs
+.DS_Store
+.env
+thumbs.db
+*.log
+*.lock
+*.sqlite
+*.sqlite3
+dist
+build
+coverage
+.vscode
