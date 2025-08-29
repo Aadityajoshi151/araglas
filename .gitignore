@@ -2,6 +2,7 @@
 /videos
 /server/thumbs
 favorites.json
+playlists.json
 .DS_Store
 .env
 thumbs.db
