@@ -27,9 +27,10 @@ body{
   display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: 0.2px;
 }
 .brand .logo{
-  width: 50px; height: 50px; border-radius: 12px;
-  background: linear-gradient(135deg, var(--brand), var(--brand-2));
-  box-shadow: 0 8px 30px rgba(124, 240, 255, 0.35);
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: none;
 }
 .searchbar{
   display: flex; gap: 8px; align-items: center; position: relative;
@@ -184,39 +185,39 @@ body{
 }
 
 /* Add this for circular channel cards */
-.channel-card {
+.channel-card-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 160px;
+  margin: auto;
+}
+.channel-card {
   background: var(--card);
   border-radius: 50%;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  width: 160px;
-  height: 160px;
-  padding: 0;
-  margin: auto;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: box-shadow 0.2s, background 0.2s;
   cursor: pointer;
   overflow: hidden;
-  justify-content: center;
+  margin-bottom: 10px;
 }
-
 .channel-card:hover {
   box-shadow: 0 4px 24px rgba(124,240,255,0.12);
   background: rgba(124,240,255,0.04);
 }
-
 .channel-thumb {
-  width: 96px;
-  height: 96px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  margin-top: 12px;
-  margin-bottom: 8px;
   background: #222;
   display: block;
 }
-
 .channel-title {
   font-weight: 700;
   font-size: 1rem;
@@ -228,7 +229,6 @@ body{
   text-overflow: ellipsis;
   max-width: 120px;
 }
-
 .channel-sub {
   font-size: 12px;
   color: var(--muted);
