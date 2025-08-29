@@ -205,12 +205,58 @@ function renderLayout(content){
         class: "circle-btn",
         onclick: manualRescan,
         title: "Rescan library"
-      }, h("i", { class: "fa-solid fa-arrows-rotate", style: "font-size:16px;" }))
+      }, h("i", { class: "fa-solid fa-arrows-rotate", style: "font-size:16px;" })),
+      h("button", {
+        class: "circle-btn",
+        id: "theme-toggle-btn",
+        title: "Toggle theme",
+        onclick: toggleTheme
+      }, h("i", { class: "fa-solid fa-circle-half-stroke", style: "font-size:16px;" }))
     ),
     content
   );
   app.append(container);
   ensurePlayer();
+// --- Theme logic ---
+async function getThemeSetting() {
+  try {
+    const res = await fetch("/api/user-settings");
+    const data = await res.json();
+    return data.theme || "dark";
+  } catch {
+    return "dark";
+  }
+}
+
+async function setThemeSetting(theme) {
+  await fetch("/api/user-settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ theme })
+  });
+}
+
+function applyTheme(theme) {
+  // Remove existing theme CSS
+  const oldLink = document.getElementById("theme-css-link");
+  if (oldLink) oldLink.remove();
+  // Add new theme CSS
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.id = "theme-css-link";
+  link.href = theme === "light" ? "/app.light.css" : "/app.css";
+  document.head.appendChild(link);
+}
+
+async function toggleTheme() {
+  const currentTheme = document.getElementById("theme-css-link")?.href.includes("app.light.css") ? "light" : "dark";
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  applyTheme(newTheme);
+  await setThemeSetting(newTheme);
+}
+
+// On page load, apply theme from settings
+getThemeSetting().then(applyTheme);
 }
 
 // Add this function to trigger manual rescan

@@ -1,0 +1,16 @@
+/* Light Theme CSS */
+:root{
+  --bg: #f7f3e8;
+  --card: #fdf6e3;
+  --muted: #a89c7c;
+  --text: #3b2f1e;
+  --brand: #c9a86a;
+  --brand-2: #b7c97a;
+  --ring: rgba(201, 168, 106, 0.18);
+}
+body{
+  background: radial-gradient(1200px 800px at 70% -10%, #f5ecd7 0%, var(--bg) 60%);
+  color: var(--text);
+}
+/* Copy all layout, card, button, etc. styles from app.css, but adjust colors for light theme. */
+/* You can copy the rest of the CSS from app.css and adjust colors as needed. */
