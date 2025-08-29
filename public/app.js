@@ -311,8 +311,12 @@ async function renderStats() {
 
 // --- UI components ---
 function cardChannel(c, onClick) {
+  // Pick a random video thumbnail from the channel
+  const thumbRelPath = c.coverRelPath || (c.videos && c.videos.length ? c.videos[Math.floor(Math.random() * c.videos.length)].relPath : null);
   return h("div", { class: "channel-card", onclick: onClick },
-    //h("img", { class: "channel-thumb lazy", "data-src": channelCover(c.coverRelPath)}),
+    thumbRelPath
+      ? h("img", { class: "channel-thumb", src: channelCover(thumbRelPath), alt: c.name })
+      : h("div", { class: "channel-thumb", style: "background:#222;" }),
     h("div", { class: "channel-title" }, c.name),
     h("div", { class: "channel-sub" }, `${c.count} video${c.count !== 1 ? "s":""}`)
   );
