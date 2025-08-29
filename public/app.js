@@ -104,7 +104,7 @@ function renderLayout(content){
   const container = h("div", { class: "container" },
     h("div", { class: "header" },
       h("div", { class: "brand" },
-        h("div", { class: "logo" }),
+        h("img", { class: "logo", src: "/icons/araglas.png", alt: "Araglas Logo" }),
         h("div", {}, "Araglas")
       ),
       h("div", { class: "searchbar" },
@@ -126,22 +126,36 @@ function renderLayout(content){
     ),
     h("div", { class: "tabs-row" },
       h("div", { class: "tabs" },
-        tab("Home", ["", "#/"].includes(location.hash), () => location.hash = "#/"),
-        tab("Channels", location.hash.startsWith("#/channels"), () => location.hash = "#/channels"),
-        tab("Favorites", location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites"),
-        tab("Stats", location.hash.startsWith("#/stats"), () => location.hash = "#/stats")
+        tab([
+          h("i", { class: "fa-solid fa-house", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
+          "Home"
+        ], ["", "#/"].includes(location.hash), () => location.hash = "#/"),
+        tab([
+          h("i", { class: "fa-solid fa-layer-group", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
+          "Channels"
+        ], location.hash.startsWith("#/channels"), () => location.hash = "#/channels"),
+        tab([
+          h("i", { class: "fa-solid fa-heart", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
+          "Favorites"
+        ], location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites"),
+        tab([
+          h("i", { class: "fa-solid fa-chart-column", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
+          "Stats"
+        ], location.hash.startsWith("#/stats"), () => location.hash = "#/stats")
       ),
       h("div", { style: "flex:1" }), // spacer to push buttons to end
       h("button", {
         class: "circle-btn",
         onclick: cleanupThumbs,
         title: "Remove thumbnails for deleted videos"
-      }, "C"),
+      },
+        h("i", { class: "fa-solid fa-broom", style: "font-size:16px;" })
+      ),
       h("button", {
         class: "circle-btn",
         onclick: manualRescan,
         title: "Rescan library"
-      }, "R")
+      }, h("i", { class: "fa-solid fa-arrows-rotate", style: "font-size:16px;" }))
     ),
     content
   );
@@ -322,41 +336,6 @@ function cardChannel(c, onClick) {
   );
 }
 
-function svgStarBootstrap(filled = false) {
-  // Bootstrap star icon SVG
-  return h("svg", {
-    xmlns: "http://www.w3.org/2000/svg",
-    width: 20,
-    height: 20,
-    fill: filled ? "gold" : "currentColor",
-    class: "bi bi-star" + (filled ? "-fill" : ""),
-    viewBox: "0 0 16 16"
-  },
-    h("path", {
-      d: filled
-        ? "M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.32-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.084 4.327 4.898.696c.441.062.612.63.282.95l-3.523 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"
-        : "M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.523-3.356c.329-.32.158-.888-.283-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.454 5.119l-4.898.696c-.441.062-.612.63-.282.95l3.523 3.356-.83 4.73zm4.905-2.767L3.612 15.443l.83-4.73-3.523-3.356 4.898-.696L7.538.792l2.084 4.327 4.898.696-3.523 3.356.83 4.73-4.389-2.256z"
-    })
-  );
-}
-
-function svgHeart(filled = false) {
-  // Bootstrap heart icon SVG
-  return h("svg", {
-    xmlns: "http://www.w3.org/2000/svg",
-    width: 20,
-    height: 20,
-    fill: filled ? "red" : "currentColor",
-    class: "bi bi-heart" + (filled ? "-fill" : ""),
-    viewBox: "0 0 16 16"
-  },
-    h("path", {
-      d: filled
-        ? "M8 2.748-.717 5.385C-3.362 7.982 1.443 13.5 8 13.5s11.362-5.518 8.717-8.115C16.317 5.385 8 2.748 8 2.748z"
-        : "M8 2.748-.717 5.385C-3.362 7.982 1.443 13.5 8 13.5s11.362-5.518 8.717-8.115C16.317 5.385 8 2.748 8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.868 8 15z"
-    })
-  );
-}
 
 function cardVideo(v, onPlay) {
   const isFav = state.favorites.some(f => f.relPath === v.relPath);
@@ -385,7 +364,12 @@ function cardVideo(v, onPlay) {
         class: `icon-btn fav-btn`,
         onclick: (e) => toggleFav(e, v),
         title: isFav ? "Unfavorite" : "Favorite"
-      }, isFav ? "Unfavorite" : "Favorite")
+      },
+        h("i", {
+          class: isFav ? "fa-solid fa-heart" : "fa-regular fa-heart",
+          style: `color:${isFav ? "red" : "var(--muted)"};font-size:18px;vertical-align:-2px;`
+        })
+      )
     )
   );
 }
@@ -476,31 +460,6 @@ function closePlayer(){
   v.src = "";
   $("#player").classList.remove("open");
 }
-
-// --- icons ---
-function svgStar(){
-  return h("svg", { width:16, height:16, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", "stroke-width":"2" },
-    h("path", { d:"M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27Z" })
-  );
-}
-function svgPlay(){
-  return h("svg", { width:16, height:16, viewBox:"0 0 24 24", fill:"currentColor" },
-    h("path", { d:"M8 5v14l11-7z" })
-  );
-}
-function svgSearch(){
-  return h("svg", { width:16, height:16, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor","stroke-width":"2" },
-    h("circle", { cx:"11", cy:"11", r:"8" }),
-    h("path", { d:"M21 21l-4.3-4.3" })
-  );
-}
-function svgLink(){
-  return h("svg", { width:16, height:16, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor","stroke-width":"2" },
-    h("path", { d:"M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07L10 5" }),
-    h("path", { d:"M14 11a5 5 0 0 0-7.07 0L5.5 12.43a5 5 0 0 0 7.07 7.07L14 19" })
-  );
-}
-
 // --- router hook ---
 function onRoute(){
   const [base] = location.hash.split("?");
