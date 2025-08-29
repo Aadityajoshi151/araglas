@@ -185,6 +185,33 @@ app.post("/api/cleanup-thumbs", async (req, res) => {
 });
 
 // ----- Favorites & Playlists -----
+// --- User Settings API ---
+const USER_SETTINGS_FILE = path.join(__dirname, "user-settings.json");
+
+async function readUserSettings() {
+  try {
+    const s = await fs.readJson(USER_SETTINGS_FILE);
+    return s;
+  } catch {
+    return { theme: "dark" };
+  }
+}
+
+async function writeUserSettings(settings) {
+  await fs.writeJson(USER_SETTINGS_FILE, settings, { spaces: 2 });
+}
+
+app.get("/api/user-settings", async (req, res) => {
+  const s = await readUserSettings();
+  res.json(s);
+});
+
+app.post("/api/user-settings", express.json(), async (req, res) => {
+  const { theme } = req.body;
+  if (!theme || !["dark", "light"].includes(theme)) return res.status(400).json({ error: "Invalid theme" });
+  await writeUserSettings({ theme });
+  res.json({ ok: true });
+});
 const FAVORITES_FILE = path.join(__dirname, "favorites.json");
 const PLAYLISTS_FILE = path.join(__dirname, "playlists.json");
 

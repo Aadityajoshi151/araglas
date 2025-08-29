@@ -3,6 +3,7 @@
 /server/thumbs
 favorites.json
 playlists.json
+user-settings.json
 .DS_Store
 .env
 thumbs.db
