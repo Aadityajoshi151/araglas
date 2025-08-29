@@ -248,6 +248,15 @@ function applyTheme(theme) {
   document.head.appendChild(link);
 }
 
+function setTheme(theme) {
+  let link = document.querySelector('link[rel="stylesheet"][href^="/app"]');
+  if (!link) return;
+  // Add a cache-busting query string
+  const ts = Date.now();
+  link.href = theme === "light" ? `/app.light.css?ts=${ts}` : `/app.css?ts=${ts}`;
+  window.currentTheme = theme;
+}
+
 async function toggleTheme() {
   const currentTheme = document.getElementById("theme-css-link")?.href.includes("app.light.css") ? "light" : "dark";
   const newTheme = currentTheme === "dark" ? "light" : "dark";
@@ -746,8 +755,7 @@ function ensurePlayer(){
           h("button", { class:"icon-btn", onclick: closePlayer }, "Close")
         )
       )
-    )
-  );
+    ));
 }
 function openPlayer(src, title, channel){
   const el = $("#player");

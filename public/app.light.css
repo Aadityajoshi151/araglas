@@ -12,5 +12,263 @@ body{
   background: radial-gradient(1200px 800px at 70% -10%, #f5ecd7 0%, var(--bg) 60%);
   color: var(--text);
 }
-/* Copy all layout, card, button, etc. styles from app.css, but adjust colors for light theme. */
-/* You can copy the rest of the CSS from app.css and adjust colors as needed. */
+.container{
+  max-width: 1200px; margin: 0 auto; padding: 24px;
+}
+
+.header{
+  display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; margin-bottom: 18px;
+}
+.brand{
+  display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: 0.2px;
+}
+.brand .logo{
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: none;
+}
+.searchbar{
+  display: flex; gap: 8px; align-items: center; position: relative;
+}
+.searchbar input{
+  width: min(70vw, 480px);
+  padding: 12px 14px;
+  border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04); color: var(--text);
+  outline: none;
+  transition: box-shadow .2s, border-color .2s;
+}
+.searchbar input:focus{ box-shadow: 0 0 0 6px var(--ring); border-color: var(--brand) }
+.pill{
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px;
+  border-radius: 999px; background: rgba(124, 240, 255, .1); border: 1px solid rgba(124, 240, 255, .2);
+  cursor: pointer; user-select: none;
+}
+.pill svg{ opacity: .9 }
+.tabs{ display:flex; gap:8px; margin: 8px 0 18px 0; flex-wrap: wrap; }
+.tab{
+  padding: 8px 12px; border-radius: 10px; cursor: pointer;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+}
+.tab.active{ background: rgba(124,240,255,.1); border-color: rgba(124,240,255,.25) }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 22px;
+  margin: 18px 0 32px 0;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.card:hover {
+  box-shadow: 0 4px 24px rgba(124,240,255,0.12);
+  background: rgba(124,240,255,0.04);
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  background: #222;
+  display: block;
+  cursor: pointer;
+}
+
+.card-body {
+  padding: 12px 12px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 0.95rem; /* slightly smaller */
+  margin-bottom: 2px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.card-sub {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-size {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.icon-btn.fav-btn {
+  border: none;
+  background: none;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s;
+  margin-left: auto;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.icon-btn.fav-btn:hover {
+  background: rgba(124,240,255,0.12);
+}
+
+.icon-btn.fav-btn svg {
+  pointer-events: none;
+  transition: fill 0.2s;
+}
+
+.icon-btn.fav-btn .bi-star-fill {
+  fill: gold;
+  stroke: gold;
+}
+
+.icon-btn.fav-btn .bi-heart-fill {
+  fill: red;
+  stroke: red;
+}
+
+.pagination{
+  display:flex; gap:6px; align-items:center; justify-content:center; margin: 18px 0;
+}
+.pagination button{
+  padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04); color: var(--text); cursor: pointer;
+}
+.pagination .cur{ opacity: .8; padding: 8px 12px }
+
+.notice{ color: var(--muted); text-align:center; margin: 22px 0 }
+
+.player{
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  display: none; align-items: center; justify-content:center; padding: 24px;
+  z-index: 50;
+}
+.player.open{ display:flex }
+.player-inner{
+  width: min(90vw, 1280px);
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; overflow: hidden;
+}
+.player video{ width: 100%; height: auto; display: block; background: black }
+
+.kbd{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono";
+  font-size: 12px; background: #0a0f13; border: 1px solid #223044; padding: 2px 6px; border-radius: 6px;
+}
+
+/* Add this for circular channel cards */
+.channel-card-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 160px;
+  margin: auto;
+}
+.channel-card {
+  background: var(--card);
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s, background 0.2s;
+  cursor: pointer;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.channel-card:hover {
+  box-shadow: 0 4px 24px rgba(124,240,255,0.12);
+  background: rgba(124,240,255,0.04);
+}
+.channel-thumb {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #222;
+  display: block;
+}
+.channel-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+.channel-sub {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.stats-page {
+  max-width: 400px;
+  margin: 40px auto;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 32px 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  text-align: center;
+}
+.stats-list > div {
+  font-size: 1.1rem;
+  margin: 14px 0;
+  color: var(--text);
+}
+.tabs-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.circle-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(124,240,255,.12);
+  border: 1px solid rgba(124,240,255,.25);
+  color: var(--brand);
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 12px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.circle-btn:hover {
+  background: var(--brand);
+  color: var(--card);
+  box-shadow: 0 2px 12px rgba(124,240,255,0.18);
+}
