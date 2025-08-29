@@ -6,7 +6,9 @@ const routes = {
   "#/channel": renderChannel,
   "#/search": renderSearch,
   "#/favorites": renderFavorites,
-  "#/stats": renderStats // <-- Add this
+  "#/stats": renderStats,
+  "#/playlists": renderPlaylists,
+  "#/playlist": renderPlaylistDetail
 };
 
 const state = {
@@ -14,7 +16,9 @@ const state = {
   page: 1,
   pageSize: 8,
   currentChannelId: null,
-  favorites: [] // now an array
+  favorites: [],
+  playlists: [],
+  currentPlaylistId: null
 };
 
 // Load favorites from API
@@ -25,6 +29,48 @@ async function loadFavs() {
   } catch {
     state.favorites = [];
   }
+}
+
+// --- Playlists ---
+async function loadPlaylists() {
+  try {
+    const playlists = await api("/api/playlists");
+    state.playlists = playlists;
+  } catch {
+    state.playlists = [];
+  }
+}
+
+async function createPlaylist(name) {
+  await fetch("/api/playlists", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name })
+  });
+  await loadPlaylists();
+}
+
+async function deletePlaylist(id) {
+  await fetch(`/api/playlists/${encodeURIComponent(id)}`, {
+    method: "DELETE"
+  });
+  await loadPlaylists();
+}
+
+async function addVideoToPlaylist(playlistId, video) {
+  await fetch(`/api/playlists/${encodeURIComponent(playlistId)}/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(video)
+  });
+}
+
+async function removeVideoFromPlaylist(playlistId, relPath) {
+  await fetch(`/api/playlists/${encodeURIComponent(playlistId)}/remove`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ relPath })
+  });
 }
 
 // Add favorite via API
@@ -139,6 +185,10 @@ function renderLayout(content){
           "Favorites"
         ], location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites"),
         tab([
+          h("i", { class: "fa-solid fa-list", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
+          "Playlists"
+        ], location.hash.startsWith("#/playlists"), () => location.hash = "#/playlists"),
+        tab([
           h("i", { class: "fa-solid fa-chart-column", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
           "Stats"
         ], location.hash.startsWith("#/stats"), () => location.hash = "#/stats")
@@ -222,6 +272,115 @@ async function renderHome() {
     )
   );
   lazyThumbs(); // <-- Add this line
+}
+
+// --- Playlists List View ---
+async function renderPlaylists() {
+  await loadPlaylists();
+  const playlists = state.playlists;
+  const list = h("div", { style: "max-width:500px;margin:0 auto;" },
+    h("div", { class: "notice" }, "Your Playlists"),
+    h("div", {},
+      h("form", {
+        onsubmit: async (e) => {
+          e.preventDefault();
+          const name = e.target.elements["playlist-name"].value.trim();
+          if (!name) return alert("Enter playlist name");
+          await createPlaylist(name);
+          e.target.reset();
+          onRoute();
+        },
+        style: "display:flex;gap:8px;margin-bottom:18px;"
+      },
+        h("input", { name: "playlist-name", placeholder: "New playlist name", style: "flex:1;padding:8px 12px;border-radius:8px;border:1px solid #222;" }),
+        h("button", { type: "submit", style: "padding:8px 16px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;" }, "Create")
+      ),
+      playlists.length ?
+        h("div", {},
+          playlists.map(pl =>
+            h("div", {
+              style: "display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #222;cursor:pointer;",
+              onclick: () => location.hash = `#/playlist?id=${encodeURIComponent(pl.id)}`
+            },
+              h("div", {},
+                h("span", { style: "font-weight:700;font-size:1.1em;" }, pl.name),
+                h("span", { style: "color:var(--muted);margin-left:10px;" }, `${pl.videos.length} video${pl.videos.length !== 1 ? "s" : ""}`)
+              ),
+              h("button", {
+                style: "background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;",
+                onclick: async (e) => {
+                  e.stopPropagation();
+                  if (confirm(`Delete playlist '${pl.name}'?`)) {
+                    await deletePlaylist(pl.id);
+                    onRoute();
+                  }
+                }
+              }, h("i", { class: "fa-solid fa-trash" }))
+            )
+          )
+        ) : h("div", { class: "notice" }, "No playlists yet.")
+    )
+  );
+  renderLayout(list);
+}
+
+// --- Playlist Detail View ---
+async function renderPlaylistDetail() {
+  const params = parseHashParams();
+  const id = params.id;
+  await loadPlaylists();
+  const playlist = state.playlists.find(pl => pl.id === id);
+  if (!playlist) {
+    return renderLayout(h("div", { class: "notice" }, "Playlist not found."));
+  }
+  // Pagination
+  const page = Number(params.page || 1);
+  const pageSize = Number(params.pageSize || 12);
+  const total = playlist.videos.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const videos = playlist.videos.slice((page-1)*pageSize, page*pageSize);
+  // Custom video card for playlist with remove button
+  function playlistVideoCard(v) {
+    return h("div", { class: "card" },
+      h("img", {
+        class: "thumb lazy",
+        "data-src": videoThumb(v.relPath),
+        alt: v.name,
+        onclick: () => openPlayer(videoUrl(v.relPath), v.name, v.channel)
+      }),
+      h("div", { class: "card-body" },
+        h("div", { class: "card-title", title: v.name }, v.name.length > 25 ? v.name.slice(0, 22) + "..." : v.name),
+        h("div", { class: "card-sub" }, [v.channel || "", v.mtime ? fmtDate(v.mtime) : ""].filter(Boolean).join(" | ")),
+        h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
+        h("div", { style: "display:flex;gap:8px;align-items:center;" },
+          h("button", {
+            class: "icon-btn",
+            title: "Remove from Playlist",
+            style: "color:var(--muted);font-size:18px;vertical-align:-2px;",
+            onclick: async (e) => {
+              e.preventDefault(); e.stopPropagation();
+              if (confirm("Remove this video from playlist?")) {
+                await removeVideoFromPlaylist(playlist.id, v.relPath);
+                await loadPlaylists();
+                onRoute();
+              }
+            }
+          }, h("i", { class: "fa-solid fa-xmark" }))
+        )
+      )
+    );
+  }
+  const grid = h("div", { class: "grid" },
+    videos.map(v => playlistVideoCard(v))
+  );
+  renderLayout(
+    h("div", {},
+      h("div", { class: "notice" }, `Playlist: ${playlist.name}`),
+      videos.length ? grid : h("div", { class: "notice" }, "No videos in this playlist."),
+      pagination({ page, totalPages }, (p) => { location.hash = `#/playlist?id=${encodeURIComponent(id)}&page=${p}&pageSize=${pageSize}`; })
+    )
+  );
+  lazyThumbs();
 }
 
 function parseHashParams() {
@@ -350,6 +509,12 @@ function cardVideo(v, onPlay) {
     v.mtime ? fmtDate(v.mtime) : ""
   ].filter(Boolean).join(" | ");
 
+  // Add to Playlist button handler
+  function openPlaylistModal(e) {
+    e.preventDefault(); e.stopPropagation();
+    showPlaylistModal(v);
+  }
+
   return h("div", { class: "card" },
     h("img", {
       class: "thumb lazy",
@@ -361,18 +526,107 @@ function cardVideo(v, onPlay) {
       h("div", { class: "card-title", title: v.name }, showTitle),
       h("div", { class: "card-sub" }, infoLine),
       h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
-      h("button", {
-        class: `icon-btn fav-btn`,
-        onclick: (e) => toggleFav(e, v),
-        title: isFav ? "Unfavorite" : "Favorite"
-      },
-        h("i", {
-          class: isFav ? "fa-solid fa-heart" : "fa-regular fa-heart",
-          style: `color:${isFav ? "red" : "var(--muted)"};font-size:18px;vertical-align:-2px;`
-        })
+      h("div", { style: "display:flex;gap:8px;align-items:center;" },
+        h("button", {
+          class: `icon-btn fav-btn`,
+          onclick: (e) => toggleFav(e, v),
+          title: isFav ? "Unfavorite" : "Favorite"
+        },
+          h("i", {
+            class: isFav ? "fa-solid fa-heart" : "fa-regular fa-heart",
+            style: `color:${isFav ? "red" : "var(--muted)"};font-size:18px;vertical-align:-2px;`
+          })
+        ),
+        h("button", {
+          class: "icon-btn",
+          title: "Add to Playlist",
+          onclick: openPlaylistModal,
+          style: "margin-left:4px;"
+        }, h("i", { class: "fa-solid fa-list", style: "font-size:18px;vertical-align:-2px;" }))
       )
     )
   );
+}
+
+// --- Playlist Modal ---
+function showPlaylistModal(video) {
+  // Remove any existing modal
+  const old = $("#playlist-modal");
+  if (old) old.remove();
+
+  // Load playlists
+  loadPlaylists().then(() => {
+    const playlists = state.playlists;
+    // Track selected playlists
+    let selected = new Set();
+
+    // Modal content
+    const modal = h("div", {
+      id: "playlist-modal",
+      style: `position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center;`
+    },
+      h("div", {
+        style: `background:var(--card);padding:28px 24px;border-radius:14px;min-width:320px;max-width:90vw;box-shadow:0 2px 24px rgba(0,0,0,0.18);position:relative;`
+      },
+        h("div", { style: "font-weight:700;font-size:1.1em;margin-bottom:12px;" }, "Add to Playlists"),
+        h("div", { style: "margin-bottom:14px;" },
+          playlists.length ?
+            playlists.map(pl =>
+              h("label", { style: "display:flex;align-items:center;gap:8px;margin-bottom:6px;" },
+                h("input", {
+                  type: "checkbox",
+                  checked: false,
+                  onchange: (e) => {
+                    if (e.target.checked) selected.add(pl.id);
+                    else selected.delete(pl.id);
+                  }
+                }),
+                h("span", {}, pl.name)
+              )
+            ) : h("div", { style: "color:var(--muted);margin-bottom:8px;" }, "No playlists yet.")
+        ),
+        h("form", {
+          onsubmit: async (e) => {
+            e.preventDefault();
+            const name = e.target.elements["new-playlist-name"].value.trim();
+            if (!name) return;
+            await createPlaylist(name);
+            e.target.reset();
+            await loadPlaylists();
+            // Re-render modal with new playlist
+            showPlaylistModal(video);
+          },
+          style: "display:flex;gap:8px;margin-bottom:14px;"
+        },
+          h("input", { name: "new-playlist-name", placeholder: "Create new playlist", style: "flex:1;padding:7px 10px;border-radius:8px;border:1px solid #222;" }),
+          h("button", { type: "submit", style: "padding:7px 14px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;" }, "Create")
+        ),
+        h("div", { style: "display:flex;gap:10px;justify-content:flex-end;" },
+          h("button", {
+            style: "padding:8px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;",
+            onclick: async () => {
+              if (selected.size === 0) return;
+              for (const pid of selected) {
+                await addVideoToPlaylist(pid, video);
+              }
+              document.body.removeChild(modal);
+              alert("Added to selected playlist(s)");
+            }
+          }, "Add"),
+          h("button", {
+            style: "padding:8px 18px;border-radius:8px;background:var(--muted);color:var(--card);border:none;cursor:pointer;",
+            onclick: () => document.body.removeChild(modal)
+          }, "Cancel")
+        ),
+        h("button", {
+          style: "position:absolute;top:8px;right:10px;background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;",
+          onclick: () => document.body.removeChild(modal),
+          title: "Close"
+        }, "×")
+      )
+    );
+    document.body.append(modal);
+  });
 }
 
 function rowVideo(channelName, v) {

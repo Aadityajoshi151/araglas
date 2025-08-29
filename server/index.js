@@ -184,8 +184,24 @@ app.post("/api/cleanup-thumbs", async (req, res) => {
   }
 });
 
-// ----- Favorites -----
+// ----- Favorites & Playlists -----
 const FAVORITES_FILE = path.join(__dirname, "favorites.json");
+const PLAYLISTS_FILE = path.join(__dirname, "playlists.json");
+
+// Helper to read playlists
+async function readPlaylists() {
+  try {
+    const pls = await fs.readJson(PLAYLISTS_FILE);
+    return Array.isArray(pls) ? pls : [];
+  } catch {
+    return [];
+  }
+}
+
+// Helper to write playlists
+async function writePlaylists(pls) {
+  await fs.writeJson(PLAYLISTS_FILE, pls, { spaces: 2 });
+}
 
 // Helper to read favorites
 async function readFavorites() {
@@ -227,6 +243,63 @@ app.delete("/api/favorites", express.json(), async (req, res) => {
   let favs = await readFavorites();
   favs = favs.filter(f => f.relPath !== relPath);
   await writeFavorites(favs);
+  res.json({ ok: true });
+});
+
+// --- Playlists API ---
+// Get all playlists
+app.get("/api/playlists", async (req, res) => {
+  const pls = await readPlaylists();
+  res.json(pls);
+});
+
+// Create a playlist
+app.post("/api/playlists", express.json(), async (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: "Missing name" });
+  let pls = await readPlaylists();
+  // Generate id (slug)
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  if (pls.find(pl => pl.id === id)) return res.status(400).json({ error: "Playlist exists" });
+  pls.push({ id, name, videos: [] });
+  await writePlaylists(pls);
+  res.json({ ok: true });
+});
+
+// Delete a playlist
+app.delete("/api/playlists/:id", async (req, res) => {
+  const { id } = req.params;
+  let pls = await readPlaylists();
+  pls = pls.filter(pl => pl.id !== id);
+  await writePlaylists(pls);
+  res.json({ ok: true });
+});
+
+// Add video to playlist
+app.post("/api/playlists/:id/add", express.json(), async (req, res) => {
+  const { id } = req.params;
+  const video = req.body;
+  if (!video || !video.relPath) return res.status(400).json({ error: "Missing video relPath" });
+  let pls = await readPlaylists();
+  const pl = pls.find(pl => pl.id === id);
+  if (!pl) return res.status(404).json({ error: "Playlist not found" });
+  if (!pl.videos.find(v => v.relPath === video.relPath)) {
+    pl.videos.push(video);
+    await writePlaylists(pls);
+  }
+  res.json({ ok: true });
+});
+
+// Remove video from playlist
+app.post("/api/playlists/:id/remove", express.json(), async (req, res) => {
+  const { id } = req.params;
+  const { relPath } = req.body;
+  if (!relPath) return res.status(400).json({ error: "Missing relPath" });
+  let pls = await readPlaylists();
+  const pl = pls.find(pl => pl.id === id);
+  if (!pl) return res.status(404).json({ error: "Playlist not found" });
+  pl.videos = pl.videos.filter(v => v.relPath !== relPath);
+  await writePlaylists(pls);
   res.json({ ok: true });
 });
 
