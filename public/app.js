@@ -8,8 +8,195 @@ const routes = {
   "#/favorites": renderFavorites,
   "#/stats": renderStats,
   "#/playlists": renderPlaylists,
-  "#/playlist": renderPlaylistDetail
+  "#/playlist": renderPlaylistDetail,
+  "#/watch": renderWatch
 };
+
+// --- Watch Page ---
+async function renderWatch() {
+  const params = parseHashParams();
+  const relPath = params.relPath;
+  const channel = params.channel;
+  const title = params.title;
+  if (!relPath || !channel || !title) {
+    return renderLayout(h("div", { class: "notice" }, "Invalid video info."));
+  }
+
+  // Find channel id and cover
+  let channelId = null;
+  let channelCoverPath = null;
+  const channelsData = await api(`/api/channels?page=1&pageSize=96&q=${encodeURIComponent(channel)}`);
+  for (const c of channelsData.data) {
+    if (c.name === channel) {
+      channelId = c.id;
+      channelCoverPath = c.coverRelPath;
+    }
+  }
+  if (!channelId) {
+    return renderLayout(h("div", { class: "notice" }, "Channel not found."));
+  }
+  // Find video details
+  const channelVideos = await api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=1&pageSize=96&q=${encodeURIComponent(title)}`);
+  const video = channelVideos.data.find(v => v.relPath === relPath);
+  if (!video) {
+    return renderLayout(h("div", { class: "notice" }, "Video not found."));
+  }
+
+  // More from channel (paginated)
+  let morePage = Number(params.morePage || 1);
+  const morePageSize = 8;
+  const moreVideosData = await api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=${morePage}&pageSize=${morePageSize}`);
+  const moreVideos = moreVideosData.data.filter(v => v.relPath !== relPath);
+
+  // Layout
+  // Try to load info.json for the video
+  let infoJson = null;
+  try {
+    const infoPath = `/videos/${video.relPath.replace(/\.[^/.]+$/, '')}.info.json`;
+    const resp = await fetch(infoPath);
+    if (resp.ok) {
+      try {
+        const rawText = await resp.text();
+        infoJson = JSON.parse(rawText);
+        console.log('info.json data:', infoJson);
+      } catch (err) {
+        console.log('Error parsing info.json:', err);
+        if (typeof rawText !== 'undefined') {
+          console.log('Raw info.json text:', rawText);
+        }
+      }
+    } else {
+      console.log('info.json fetch not ok:', resp.status);
+    }
+  } catch (err) {
+    console.log('Error fetching info.json:', err);
+  }
+
+  // Collapsible info section
+  let infoSection = null;
+  if (infoJson) {
+    let expanded = false;
+    // Helper to humanize numbers with label
+    function humanizeNumber(n, label) {
+      if (typeof n !== 'number') return '';
+      let val = '';
+      if (n < 1000) val = n;
+      else if (n < 1000000) val = (n/1000).toFixed(1).replace(/\.0$/, '') + 'K';
+      else val = (n/1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+      return `${val} ${label}`;
+    }
+    // Helper to format date as '15-Aug-2025'
+    function humanizeDate(d) {
+      if (!d) return '';
+      if (/^\d{8}$/.test(d)) {
+        // YYYYMMDD
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const day = d.slice(6,8);
+        const month = months[parseInt(d.slice(4,6),10)-1];
+        const year = d.slice(0,4);
+        return `${day}-${month}-${year}`;
+      }
+      return d;
+    }
+    let descExpanded = false;
+    infoSection = h("div", { style: "margin-top:28px;" },
+      h("div", {
+        style: "font-weight:600;font-size:1.08em;cursor:pointer;padding:10px 0;color:var(--brand);user-select:none;",
+        onclick: function() {
+          expanded = !expanded;
+          this.nextSibling.style.display = expanded ? "block" : "none";
+          this.innerText = expanded ? "Hide Details ▲" : "Show Details ▼";
+        }
+      }, "Show Details ▼"),
+      h("div", {
+        style: "display:none;background:rgba(0,0,0,0.04);border-radius:10px;padding:16px 18px;margin-top:6px;color:var(--text);font-size:1em;"
+      },
+        // Description (expand/collapse)
+        infoJson.description ? h("div", { style: "margin-bottom:10px;" },
+          h("div", {
+            style: "font-weight:500;font-size:1em;cursor:pointer;color:var(--brand);user-select:none;margin-bottom:6px;",
+            onclick: function() {
+              descExpanded = !descExpanded;
+              this.nextSibling.style.display = descExpanded ? "block" : "none";
+              this.innerText = descExpanded ? "Hide Description ▲" : "Show Description ▼";
+            }
+          }, "Show Description ▼"),
+          h("div", {
+            style: "display:none;white-space:pre-line;margin-bottom:10px;"
+          }, infoJson.description),
+          h("hr", { style: "border:none;border-top:1px solid var(--muted);margin:10px 0 18px 0;" })
+        ) : null,
+        // Youtube video link
+        infoJson.webpage_url ? h("div", { style: "margin-bottom:10px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fab fa-youtube", style: "color:#ff0000;font-size:1.2em;" }),
+          h("a", { href: infoJson.webpage_url, target: "_blank", style: "color:var(--brand);font-weight:600;text-decoration:none;" }, "Youtube video")
+        ) : null,
+        // Channel URL
+        infoJson.channel_url ? h("div", { style: "margin-bottom:10px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fab fa-youtube", style: "color:#ff0000;font-size:1.2em;" }),
+          h("a", { href: infoJson.channel_url, target: "_blank", style: "color:var(--brand);font-weight:600;text-decoration:none;" }, `${infoJson.channel || 'Channel'} on Youtube`)
+        ) : null,
+        // View count
+        typeof infoJson.view_count === 'number' ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fa fa-eye", style: "color:var(--muted);font-size:1em;" }),
+          humanizeNumber(infoJson.view_count, 'Views'),
+          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "(At the time of download)")
+        ) : null,
+        // Like count
+        typeof infoJson.like_count === 'number' ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fa fa-thumbs-up", style: "color:var(--brand);font-size:1em;" }),
+          humanizeNumber(infoJson.like_count, 'Likes'),
+          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "(At the time of download)")
+        ) : null,
+        // Channel follower count
+        typeof infoJson.channel_follower_count === 'number' ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fa fa-users", style: "color:var(--brand-2);font-size:1em;" }),
+          humanizeNumber(infoJson.channel_follower_count, 'Subscribers'),
+          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "(At the time of download)")
+        ) : null,
+        // Release date
+        infoJson.release_date ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fa fa-calendar-alt", style: "color:var(--muted);font-size:1em;" }),
+          `Uploaded on ${humanizeDate(infoJson.release_date)}`
+        ) : null
+      )
+    );
+  }
+
+  renderLayout(
+    h("div", { style: "display:flex;justify-content:center;align-items:center;min-height:70vh;" },
+      h("div", { style: "width:100%;max-width:1100px;margin:0 auto;" },
+        h("div", { style: "background:var(--card);border-radius:18px;box-shadow:none;padding:40px 48px 40px 48px;margin-bottom:32px;" },
+          h("video", {
+            src: videoUrl(video.relPath),
+            controls: true,
+            style: "width:100%;max-height:80vh;border-radius:14px;background:black;"
+          }),
+          h("div", { style: "margin-top:32px;" },
+            h("div", {
+              style: "font-size:2em;font-weight:700;margin-bottom:18px;word-break:break-word;overflow-wrap:break-word;white-space:pre-line;max-width:100%;"
+            }, formatTitle(video.name)),
+            h("div", { style: "display:flex;align-items:center;gap:16px;" },
+              h("img", {
+                src: channelCover(channelCoverPath || video.relPath.split("/")[0]),
+                style: "width:40px;height:40px;border-radius:50%;object-fit:cover;background:#222;",
+                onerror: function() { this.src = '/icons/araglas.png'; }
+              }),
+              h("a", {
+                href: `#/channel?id=${encodeURIComponent(channelId)}&name=${encodeURIComponent(channel)}`,
+                style: "color:var(--brand);font-weight:700;text-decoration:none;font-size:1.2em;"
+              }, channel)
+            ),
+            h("div", { style: "color:var(--muted);margin-top:12px;font-size:1.1em;" },
+              `Modified: ${fmtDate(video.mtime)} | Size: ${fmtSize(video.size)}`
+            ),
+            infoSection
+          )
+        )
+      )
+    )
+  );
+}
 
 const state = {
   query: "",
@@ -106,6 +293,11 @@ async function toggleFav(e, item) {
 }
 
 // --- utils ---
+// Format video title for display: replace underscores with spaces and remove extension
+function formatTitle(name) {
+  let base = name.replace(/\.[^/.]+$/, "");
+  return base.replace(/_/g, " ");
+}
 function $(sel, root=document){ return root.querySelector(sel); }
 function h(tag, attrs={}, ...children){
   const el = document.createElement(tag);
@@ -114,7 +306,10 @@ function h(tag, attrs={}, ...children){
     else if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2), v);
     else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
   });
-  children.flat().forEach(c => el.append(c.nodeType ? c : document.createTextNode(c)));
+  children.flat().forEach(c => {
+    if (c == null) return;
+    el.append(c.nodeType ? c : document.createTextNode(c));
+  });
   return el;
 }
 function fmtSize(bytes){
@@ -153,10 +348,11 @@ function renderLayout(content){
         h("img", { class: "logo", src: "/icons/araglas.png", alt: "Araglas Logo" }),
         h("div", {}, "Araglas")
       ),
-      h("div", { class: "searchbar" },
+      h("div", { class: "searchbar", style: "display:flex;align-items:center;position:relative;" },
         h("input", {
           placeholder: "Search videos…",
           value: state.query,
+          style: "flex:1;",
           oninput: (e)=> { state.query = e.target.value; },
           onkeydown: (e)=>{
             if (e.key === "Enter") {
@@ -167,7 +363,19 @@ function renderLayout(content){
               location.hash = `#/search?q=${encodeURIComponent(state.query)}&page=1`;
             }
           }
-        })
+        }),
+        h("button", {
+          style: "position:absolute;right:6px;background:none;border:none;cursor:pointer;padding:0 8px;font-size:18px;color:var(--muted);height:100%;display:flex;align-items:center;",
+          onclick: () => {
+            state.query = "";
+            const input = document.querySelector('.searchbar input');
+            if (input) {
+              input.value = "";
+              input.focus();
+            }
+          },
+          title: "Clear search"
+        }, h("i", { class: "fa-solid fa-xmark" }))
       )
     ),
     h("div", { class: "tabs-row" },
@@ -556,7 +764,8 @@ function cardVideo(v, onPlay) {
   const isFav = state.favorites.some(f => f.relPath === v.relPath);
 
   // Truncate title if longer than 25 chars
-  const showTitle = v.name.length > 25 ? v.name.slice(0, 22) + "..." : v.name;
+  const formatted = formatTitle(v.name);
+  const showTitle = formatted.length > 25 ? formatted.slice(0, 22) + "..." : formatted;
 
   // Info line: channel | date
   const infoLine = [
@@ -570,21 +779,25 @@ function cardVideo(v, onPlay) {
     showPlaylistModal(v);
   }
 
-  return h("div", { class: "card" },
+  // Link to /watch page
+  function goToWatch() {
+    location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(v.name)}`;
+  }
+
+  return h("div", { class: "card", onclick: goToWatch },
     h("img", {
       class: "thumb lazy",
       "data-src": videoThumb(v.relPath),
-      alt: v.name,
-      onclick: onPlay
+      alt: formatted
     }),
     h("div", { class: "card-body" },
-      h("div", { class: "card-title", title: v.name }, showTitle),
+      h("div", { class: "card-title", title: formatted }, showTitle),
       h("div", { class: "card-sub" }, infoLine),
       h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
       h("div", { style: "display:flex;gap:8px;align-items:center;" },
         h("button", {
           class: `icon-btn fav-btn`,
-          onclick: (e) => toggleFav(e, v),
+          onclick: (e) => { e.stopPropagation(); toggleFav(e, v); },
           title: isFav ? "Unfavorite" : "Favorite"
         },
           h("i", {
@@ -595,7 +808,7 @@ function cardVideo(v, onPlay) {
         h("button", {
           class: "icon-btn",
           title: "Add to Playlist",
-          onclick: openPlaylistModal,
+          onclick: (e) => { e.stopPropagation(); openPlaylistModal(e); },
           style: "margin-left:4px;"
         }, h("i", { class: "fa-solid fa-list", style: "font-size:18px;vertical-align:-2px;" }))
       )
@@ -687,10 +900,11 @@ function showPlaylistModal(video) {
 function rowVideo(channelName, v) {
   const favKey = JSON.stringify({ relPath: v.relPath, name: v.name, channel: channelName });
   const isFav = state.favorites.has(favKey);
+  const formatted = formatTitle(v.name);
   return h("div", { class: "video-row" },
-    h("img", { class: "thumb lazy", "data-src": videoThumb(v.relPath), alt: v.name, onclick: ()=> openPlayer(videoUrl(v.relPath), v.name, channelName) }),
+    h("img", { class: "thumb lazy", "data-src": videoThumb(v.relPath), alt: formatted, onclick: ()=> openPlayer(videoUrl(v.relPath), formatted, channelName) }),
     h("div", {},
-      h("div", { class: "video-title" }, v.name),
+      h("div", { class: "video-title" }, formatted),
       h("div", { class: "video-meta" }, `${channelName} • ${fmtSize(v.size)} • ${fmtDate(v.mtime)}`),
       h("div", { class: "actions", style:"margin-top:8px" },
         h("button", { class: `icon-btn ${isFav ? "active":""}`, onclick: (e)=>toggleFav(e, favKey) }, svgStar(), isFav ? "Favorited" : "Favorite"),
@@ -760,7 +974,7 @@ function ensurePlayer(){
 function openPlayer(src, title, channel){
   const el = $("#player");
   $("#player-video").src = src;
-  $("#player-title").textContent = (channel ? channel + " • " : "") + title;
+  $("#player-title").textContent = (channel ? channel + " • " : "") + formatTitle(title);
   el.classList.add("open");
 }
 function closePlayer(){
