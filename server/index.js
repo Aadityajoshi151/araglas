@@ -55,6 +55,7 @@ app.use("/video", express.static(LIBRARY_DIR, {
     res.setHeader("Cache-Control", "public, max-age=86400, immutable");
   }
 }));
+app.use('/videos', express.static(path.join(LIBRARY_DIR)));
 
 // --- API: channels list ---
 app.get("/api/channels", (req, res) => {

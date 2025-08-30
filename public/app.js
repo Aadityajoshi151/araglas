@@ -8,8 +8,116 @@ const routes = {
   "#/favorites": renderFavorites,
   "#/stats": renderStats,
   "#/playlists": renderPlaylists,
-  "#/playlist": renderPlaylistDetail
+  "#/playlist": renderPlaylistDetail,
+  "#/watch": renderWatch
 };
+
+// --- Watch Page ---
+async function renderWatch() {
+  const params = parseHashParams();
+  const relPath = params.relPath;
+  const channel = params.channel;
+  const title = params.title;
+  if (!relPath || !channel || !title) {
+    return renderLayout(h("div", { class: "notice" }, "Invalid video info."));
+  }
+
+  // Find channel id
+  let channelId = null;
+  const channelsData = await api(`/api/channels?page=1&pageSize=96&q=${encodeURIComponent(channel)}`);
+  for (const c of channelsData.data) {
+    if (c.name === channel) channelId = c.id;
+  }
+  if (!channelId) {
+    return renderLayout(h("div", { class: "notice" }, "Channel not found."));
+  }
+  // Find video details
+  const channelVideos = await api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=1&pageSize=96&q=${encodeURIComponent(title)}`);
+  const video = channelVideos.data.find(v => v.relPath === relPath);
+  if (!video) {
+    return renderLayout(h("div", { class: "notice" }, "Video not found."));
+  }
+
+  // More from channel (paginated)
+  let morePage = Number(params.morePage || 1);
+  const morePageSize = 8;
+  const moreVideosData = await api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=${morePage}&pageSize=${morePageSize}`);
+  const moreVideos = moreVideosData.data.filter(v => v.relPath !== relPath);
+
+  // Layout
+  // Try to load info.json for the video
+  let infoJson = null;
+  try {
+    const infoPath = `/videos/${video.relPath.replace(/\.[^/.]+$/, '')}.info.json`;
+    const resp = await fetch(infoPath);
+    if (resp.ok) {
+      try {
+        const rawText = await resp.text();
+        infoJson = JSON.parse(rawText);
+        console.log('info.json data:', infoJson);
+      } catch (err) {
+        console.log('Error parsing info.json:', err);
+        if (typeof rawText !== 'undefined') {
+          console.log('Raw info.json text:', rawText);
+        }
+      }
+    } else {
+      console.log('info.json fetch not ok:', resp.status);
+    }
+  } catch (err) {
+    console.log('Error fetching info.json:', err);
+  }
+
+  // Collapsible info section
+  let infoSection = null;
+  if (infoJson && infoJson.description) {
+    let expanded = false;
+    infoSection = h("div", { style: "margin-top:28px;" },
+      h("div", {
+        style: "font-weight:600;font-size:1.08em;cursor:pointer;padding:10px 0;color:var(--brand);user-select:none;",
+        onclick: function() {
+          expanded = !expanded;
+          this.nextSibling.style.display = expanded ? "block" : "none";
+          this.innerText = expanded ? "Hide Description ▲" : "Show Description ▼";
+        }
+      }, "Show Description ▼"),
+      h("div", {
+        style: "display:none;background:rgba(0,0,0,0.04);border-radius:10px;padding:16px 18px;margin-top:6px;color:var(--text);white-space:pre-line;font-size:1em;"
+      }, infoJson.description)
+    );
+  }
+
+  renderLayout(
+    h("div", { style: "display:flex;justify-content:center;align-items:center;min-height:70vh;" },
+      h("div", { style: "width:100%;max-width:1100px;margin:0 auto;" },
+        h("div", { style: "background:var(--card);border-radius:18px;box-shadow:none;padding:40px 48px 40px 48px;margin-bottom:32px;" },
+          h("video", {
+            src: videoUrl(video.relPath),
+            controls: true,
+            style: "width:100%;max-height:80vh;border-radius:14px;background:black;"
+          }),
+          h("div", { style: "margin-top:32px;" },
+            h("div", { style: "font-size:2em;font-weight:700;margin-bottom:18px;" }, video.name),
+            h("div", { style: "display:flex;align-items:center;gap:16px;" },
+              h("img", {
+                src: channelCover(video.relPath.split("/")[0]),
+                style: "width:40px;height:40px;border-radius:50%;object-fit:cover;background:#222;"
+              }),
+              h("a", {
+                href: `#/channel?id=${encodeURIComponent(channelId)}&name=${encodeURIComponent(channel)}`,
+                style: "color:var(--brand);font-weight:700;text-decoration:none;font-size:1.2em;"
+              }, channel)
+            ),
+            h("div", { style: "color:var(--muted);margin-top:12px;font-size:1.1em;" },
+              `Modified: ${fmtDate(video.mtime)} | Size: ${fmtSize(video.size)}`
+            ),
+            infoSection
+          )
+        )
+      )
+    )
+  );
+}
 
 const state = {
   query: "",
@@ -114,7 +222,10 @@ function h(tag, attrs={}, ...children){
     else if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2), v);
     else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
   });
-  children.flat().forEach(c => el.append(c.nodeType ? c : document.createTextNode(c)));
+  children.flat().forEach(c => {
+    if (c == null) return;
+    el.append(c.nodeType ? c : document.createTextNode(c));
+  });
   return el;
 }
 function fmtSize(bytes){
@@ -570,12 +681,16 @@ function cardVideo(v, onPlay) {
     showPlaylistModal(v);
   }
 
-  return h("div", { class: "card" },
+  // Link to /watch page
+  function goToWatch() {
+    location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(v.name)}`;
+  }
+
+  return h("div", { class: "card", onclick: goToWatch },
     h("img", {
       class: "thumb lazy",
       "data-src": videoThumb(v.relPath),
-      alt: v.name,
-      onclick: onPlay
+      alt: v.name
     }),
     h("div", { class: "card-body" },
       h("div", { class: "card-title", title: v.name }, showTitle),
@@ -584,7 +699,7 @@ function cardVideo(v, onPlay) {
       h("div", { style: "display:flex;gap:8px;align-items:center;" },
         h("button", {
           class: `icon-btn fav-btn`,
-          onclick: (e) => toggleFav(e, v),
+          onclick: (e) => { e.stopPropagation(); toggleFav(e, v); },
           title: isFav ? "Unfavorite" : "Favorite"
         },
           h("i", {
@@ -595,7 +710,7 @@ function cardVideo(v, onPlay) {
         h("button", {
           class: "icon-btn",
           title: "Add to Playlist",
-          onclick: openPlaylistModal,
+          onclick: (e) => { e.stopPropagation(); openPlaylistModal(e); },
           style: "margin-left:4px;"
         }, h("i", { class: "fa-solid fa-list", style: "font-size:18px;vertical-align:-2px;" }))
       )
