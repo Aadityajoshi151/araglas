@@ -22,11 +22,15 @@ async function renderWatch() {
     return renderLayout(h("div", { class: "notice" }, "Invalid video info."));
   }
 
-  // Find channel id
+  // Find channel id and cover
   let channelId = null;
+  let channelCoverPath = null;
   const channelsData = await api(`/api/channels?page=1&pageSize=96&q=${encodeURIComponent(channel)}`);
   for (const c of channelsData.data) {
-    if (c.name === channel) channelId = c.id;
+    if (c.name === channel) {
+      channelId = c.id;
+      channelCoverPath = c.coverRelPath;
+    }
   }
   if (!channelId) {
     return renderLayout(h("div", { class: "notice" }, "Channel not found."));
@@ -169,11 +173,14 @@ async function renderWatch() {
             style: "width:100%;max-height:80vh;border-radius:14px;background:black;"
           }),
           h("div", { style: "margin-top:32px;" },
-            h("div", { style: "font-size:2em;font-weight:700;margin-bottom:18px;" }, video.name),
+            h("div", {
+              style: "font-size:2em;font-weight:700;margin-bottom:18px;word-break:break-word;overflow-wrap:break-word;white-space:pre-line;max-width:100%;"
+            }, formatTitle(video.name)),
             h("div", { style: "display:flex;align-items:center;gap:16px;" },
               h("img", {
-                src: channelCover(video.relPath.split("/")[0]),
-                style: "width:40px;height:40px;border-radius:50%;object-fit:cover;background:#222;"
+                src: channelCover(channelCoverPath || video.relPath.split("/")[0]),
+                style: "width:40px;height:40px;border-radius:50%;object-fit:cover;background:#222;",
+                onerror: function() { this.src = '/icons/araglas.png'; }
               }),
               h("a", {
                 href: `#/channel?id=${encodeURIComponent(channelId)}&name=${encodeURIComponent(channel)}`,
@@ -286,6 +293,11 @@ async function toggleFav(e, item) {
 }
 
 // --- utils ---
+// Format video title for display: replace underscores with spaces and remove extension
+function formatTitle(name) {
+  let base = name.replace(/\.[^/.]+$/, "");
+  return base.replace(/_/g, " ");
+}
 function $(sel, root=document){ return root.querySelector(sel); }
 function h(tag, attrs={}, ...children){
   const el = document.createElement(tag);
@@ -336,10 +348,11 @@ function renderLayout(content){
         h("img", { class: "logo", src: "/icons/araglas.png", alt: "Araglas Logo" }),
         h("div", {}, "Araglas")
       ),
-      h("div", { class: "searchbar" },
+      h("div", { class: "searchbar", style: "display:flex;align-items:center;position:relative;" },
         h("input", {
           placeholder: "Search videos…",
           value: state.query,
+          style: "flex:1;",
           oninput: (e)=> { state.query = e.target.value; },
           onkeydown: (e)=>{
             if (e.key === "Enter") {
@@ -350,7 +363,19 @@ function renderLayout(content){
               location.hash = `#/search?q=${encodeURIComponent(state.query)}&page=1`;
             }
           }
-        })
+        }),
+        h("button", {
+          style: "position:absolute;right:6px;background:none;border:none;cursor:pointer;padding:0 8px;font-size:18px;color:var(--muted);height:100%;display:flex;align-items:center;",
+          onclick: () => {
+            state.query = "";
+            const input = document.querySelector('.searchbar input');
+            if (input) {
+              input.value = "";
+              input.focus();
+            }
+          },
+          title: "Clear search"
+        }, h("i", { class: "fa-solid fa-xmark" }))
       )
     ),
     h("div", { class: "tabs-row" },
@@ -739,7 +764,8 @@ function cardVideo(v, onPlay) {
   const isFav = state.favorites.some(f => f.relPath === v.relPath);
 
   // Truncate title if longer than 25 chars
-  const showTitle = v.name.length > 25 ? v.name.slice(0, 22) + "..." : v.name;
+  const formatted = formatTitle(v.name);
+  const showTitle = formatted.length > 25 ? formatted.slice(0, 22) + "..." : formatted;
 
   // Info line: channel | date
   const infoLine = [
@@ -762,10 +788,10 @@ function cardVideo(v, onPlay) {
     h("img", {
       class: "thumb lazy",
       "data-src": videoThumb(v.relPath),
-      alt: v.name
+      alt: formatted
     }),
     h("div", { class: "card-body" },
-      h("div", { class: "card-title", title: v.name }, showTitle),
+      h("div", { class: "card-title", title: formatted }, showTitle),
       h("div", { class: "card-sub" }, infoLine),
       h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
       h("div", { style: "display:flex;gap:8px;align-items:center;" },
@@ -874,10 +900,11 @@ function showPlaylistModal(video) {
 function rowVideo(channelName, v) {
   const favKey = JSON.stringify({ relPath: v.relPath, name: v.name, channel: channelName });
   const isFav = state.favorites.has(favKey);
+  const formatted = formatTitle(v.name);
   return h("div", { class: "video-row" },
-    h("img", { class: "thumb lazy", "data-src": videoThumb(v.relPath), alt: v.name, onclick: ()=> openPlayer(videoUrl(v.relPath), v.name, channelName) }),
+    h("img", { class: "thumb lazy", "data-src": videoThumb(v.relPath), alt: formatted, onclick: ()=> openPlayer(videoUrl(v.relPath), formatted, channelName) }),
     h("div", {},
-      h("div", { class: "video-title" }, v.name),
+      h("div", { class: "video-title" }, formatted),
       h("div", { class: "video-meta" }, `${channelName} • ${fmtSize(v.size)} • ${fmtDate(v.mtime)}`),
       h("div", { class: "actions", style:"margin-top:8px" },
         h("button", { class: `icon-btn ${isFav ? "active":""}`, onclick: (e)=>toggleFav(e, favKey) }, svgStar(), isFav ? "Favorited" : "Favorite"),
@@ -947,7 +974,7 @@ function ensurePlayer(){
 function openPlayer(src, title, channel){
   const el = $("#player");
   $("#player-video").src = src;
-  $("#player-title").textContent = (channel ? channel + " • " : "") + title;
+  $("#player-title").textContent = (channel ? channel + " • " : "") + formatTitle(title);
   el.classList.add("open");
 }
 function closePlayer(){
