@@ -38,11 +38,17 @@ async function renderWatch() {
     return renderLayout(h("div", { class: "notice" }, "Channel not found."));
   }
   // Find video details
-  const channelVideos = await api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=1&pageSize=96&q=${encodeURIComponent(title)}`);
-  const video = channelVideos.data.find(v => v.relPath === relPath);
-  if (!video) {
-    return renderLayout(h("div", { class: "notice" }, "Video not found."));
-  }
+    // Try to find video by relPath first, fallback to title if not found
+    const channelVideos = await api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=1&pageSize=96`);
+    let video = channelVideos.data.find(v => v.relPath === relPath);
+    if (!video) {
+      // Try to match by title (ignoring extension and underscores)
+      const formattedTitle = formatTitle(title).toLowerCase();
+      video = channelVideos.data.find(v => formatTitle(v.name).toLowerCase() === formattedTitle);
+    }
+    if (!video) {
+      return renderLayout(h("div", { class: "notice" }, `Video not found. relPath: ${relPath}, title: ${title}`));
+    }
 
   // More from channel (paginated)
   let morePage = Number(params.morePage || 1);
