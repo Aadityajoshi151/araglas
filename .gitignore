@@ -4,6 +4,7 @@
 favorites.json
 playlists.json
 user-settings.json
+moments.json
 .DS_Store
 .env
 thumbs.db

@@ -215,6 +215,7 @@ app.post("/api/user-settings", express.json(), async (req, res) => {
 });
 const FAVORITES_FILE = path.join(__dirname, "favorites.json");
 const PLAYLISTS_FILE = path.join(__dirname, "playlists.json");
+const MOMENTS_FILE = path.join(__dirname, "moments.json");
 
 // Helper to read playlists
 async function readPlaylists() {
@@ -244,6 +245,18 @@ async function readFavorites() {
 // Helper to write favorites
 async function writeFavorites(favs) {
   await fs.writeJson(FAVORITES_FILE, favs, { spaces: 2 });
+}
+
+// Helper to read moments
+async function readMoments() {
+  try {
+    return await fs.readJson(MOMENTS_FILE);
+  } catch {
+    return [];
+  }
+}
+async function writeMoments(moments) {
+  await fs.writeJson(MOMENTS_FILE, moments, { spaces: 2 });
 }
 
 // Get all favorites
@@ -277,8 +290,20 @@ app.delete("/api/favorites", express.json(), async (req, res) => {
 // --- Playlists API ---
 // Get all playlists
 app.get("/api/playlists", async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 20;
   const pls = await readPlaylists();
-  res.json(pls);
+  const total = pls.length;
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+  const pageData = pls.slice(start, end);
+  res.json({
+    data: pageData,
+    page,
+    pageSize,
+    total,
+    totalPages: Math.ceil(total / pageSize)
+  });
 });
 
 // Create a playlist
@@ -352,6 +377,41 @@ app.post("/api/rescan", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// --- API: get all moments ---
+app.get("/api/moments", async (req, res) => {
+  const moments = await readMoments();
+  const page = Number(req.query.page || 1);
+  const pageSize = Math.max(1, Math.min(96, Number(req.query.pageSize) || 20));
+  const total = moments.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const data = moments.slice((page-1)*pageSize, page*pageSize);
+  res.json({ page, pageSize, total, totalPages, data });
+});
+
+// --- API: add a moment ---
+app.post("/api/moments", express.json(), async (req, res) => {
+  const { relPath, timestamp, title } = req.body;
+  if (!relPath || typeof timestamp !== "number" || !title) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+  const moments = await readMoments();
+  moments.push({ relPath, timestamp, title });
+  await writeMoments(moments);
+  res.json({ ok: true });
+});
+
+// --- API: delete a moment ---
+app.delete("/api/moments", express.json(), async (req, res) => {
+  const { relPath, timestamp } = req.body;
+  if (!relPath || typeof timestamp !== "number") {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+  let moments = await readMoments();
+  moments = moments.filter(m => !(m.relPath === relPath && m.timestamp === timestamp));
+  await writeMoments(moments);
+  res.json({ ok: true });
 });
 
 // Fallback to SPA
