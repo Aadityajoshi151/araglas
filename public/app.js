@@ -805,15 +805,22 @@ function cardVideo(v, onPlay) {
 
   // Link to /watch page
   function goToWatch() {
-    location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(v.name)}`;
+    location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(formatTitle(v.name))}`;
   }
 
   return h("div", { class: "card", onclick: goToWatch },
-    h("img", {
-      class: "thumb lazy",
-      "data-src": videoThumb(v.relPath),
-      alt: formatted
-    }),
+    h("div", { style: "position:relative;" },
+      h("img", {
+        class: "thumb lazy",
+        "data-src": videoThumb(v.relPath),
+        alt: formatted
+      }),
+      h("span", {
+        style: "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.45);border-radius:50%;padding:10px;display:flex;align-items:center;justify-content:center;pointer-events:none;"
+      },
+        h("i", { class: "fa-solid fa-play", style: "font-size:28px;color:var(--brand);" })
+      )
+    ),
     h("div", { class: "card-body" },
       h("div", { class: "card-title", title: formatted }, showTitle),
       h("div", { class: "card-sub" }, infoLine),
