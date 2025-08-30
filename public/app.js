@@ -54,22 +54,24 @@ async function renderWatch() {
   try {
     const infoPath = `/videos/${video.relPath.replace(/\.[^/.]+$/, '')}.info.json`;
     const resp = await fetch(infoPath);
-    if (resp.ok) {
+    if (resp.ok && resp.headers.get('Content-Type') && resp.headers.get('Content-Type').includes('application/json')) {
       try {
         const rawText = await resp.text();
-        infoJson = JSON.parse(rawText);
-        console.log('info.json data:', infoJson);
+        if (rawText.trim().length > 0 && rawText.trim()[0] === '{') {
+          infoJson = JSON.parse(rawText);
+        } else {
+          infoJson = null;
+        }
       } catch (err) {
         console.log('Error parsing info.json:', err);
-        if (typeof rawText !== 'undefined') {
-          console.log('Raw info.json text:', rawText);
-        }
+        infoJson = null;
       }
     } else {
-      console.log('info.json fetch not ok:', resp.status);
+      infoJson = null;
     }
   } catch (err) {
     console.log('Error fetching info.json:', err);
+    infoJson = null;
   }
 
   // Collapsible info section
@@ -402,6 +404,28 @@ function renderLayout(content){
         ], location.hash.startsWith("#/stats"), () => location.hash = "#/stats")
       ),
       h("div", { style: "flex:1" }), // spacer to push buttons to end
+      h("button", {
+        class: "circle-btn",
+        style: "margin-right:8px;",
+        title: "Surprise Me",
+        onclick: async () => {
+          try {
+            const channelsData = await api("/api/channels?page=1&pageSize=96");
+            const channels = channelsData.data;
+            if (!channels.length) return alert("No channels found.");
+            const randChannel = channels[Math.floor(Math.random() * channels.length)];
+            const channelId = randChannel.id;
+            const channelName = randChannel.name;
+            const videosData = await api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=1&pageSize=96`);
+            const videos = videosData.data;
+            if (!videos.length) return alert("No videos found in channel.");
+            const randVideo = videos[Math.floor(Math.random() * videos.length)];
+            location.hash = `#/watch?relPath=${encodeURIComponent(randVideo.relPath)}&channel=${encodeURIComponent(channelName)}&title=${encodeURIComponent(randVideo.name)}`;
+          } catch (err) {
+            alert("Failed to surprise you: " + err.message);
+          }
+        }
+      }, h("i", { class: "fa-solid fa-face-surprise", style: "font-size:18px;color:var(--brand);" })),
       h("button", {
         class: "circle-btn",
         onclick: cleanupThumbs,
