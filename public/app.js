@@ -70,20 +70,67 @@ async function renderWatch() {
 
   // Collapsible info section
   let infoSection = null;
-  if (infoJson && infoJson.description) {
+  if (infoJson) {
     let expanded = false;
+    // Helper to humanize numbers
+    function humanizeNumber(n) {
+      if (typeof n !== 'number') return '';
+      if (n < 1000) return n;
+      if (n < 1000000) return (n/1000).toFixed(1).replace(/\.0$/, '') + 'K';
+      return (n/1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    // Helper to humanize date
+    function humanizeDate(d) {
+      if (!d) return '';
+      if (/^\d{8}$/.test(d)) {
+        // YYYYMMDD
+        return d.slice(6,8) + '-' + d.slice(4,6) + '-' + d.slice(0,4);
+      }
+      return d;
+    }
     infoSection = h("div", { style: "margin-top:28px;" },
       h("div", {
         style: "font-weight:600;font-size:1.08em;cursor:pointer;padding:10px 0;color:var(--brand);user-select:none;",
         onclick: function() {
           expanded = !expanded;
           this.nextSibling.style.display = expanded ? "block" : "none";
-          this.innerText = expanded ? "Hide Description ▲" : "Show Description ▼";
+          this.innerText = expanded ? "Hide Details ▲" : "Show Details ▼";
         }
-      }, "Show Description ▼"),
+      }, "Show Details ▼"),
       h("div", {
-        style: "display:none;background:rgba(0,0,0,0.04);border-radius:10px;padding:16px 18px;margin-top:6px;color:var(--text);white-space:pre-line;font-size:1em;"
-      }, infoJson.description)
+        style: "display:none;background:rgba(0,0,0,0.04);border-radius:10px;padding:16px 18px;margin-top:6px;color:var(--text);font-size:1em;"
+      },
+        // Description
+        infoJson.description ? h("div", { style: "margin-bottom:16px;white-space:pre-line;" }, infoJson.description) : null,
+        // Channel URL
+        infoJson.channel_url ? h("div", { style: "margin-bottom:10px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fab fa-youtube", style: "color:#ff0000;font-size:1.2em;" }),
+          h("a", { href: infoJson.channel_url, target: "_blank", style: "color:var(--brand);font-weight:600;text-decoration:none;" }, "Channel on YouTube")
+        ) : null,
+        // View count
+        typeof infoJson.view_count === 'number' ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fa fa-eye", style: "color:var(--muted);font-size:1em;" }),
+          humanizeNumber(infoJson.view_count),
+          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "At the time of download")
+        ) : null,
+        // Like count
+        typeof infoJson.like_count === 'number' ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fa fa-thumbs-up", style: "color:var(--brand);font-size:1em;" }),
+          humanizeNumber(infoJson.like_count),
+          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "At the time of download")
+        ) : null,
+        // Channel follower count
+        typeof infoJson.channel_follower_count === 'number' ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fa fa-users", style: "color:var(--brand-2);font-size:1em;" }),
+          humanizeNumber(infoJson.channel_follower_count),
+          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "At the time of download")
+        ) : null,
+        // Release date
+        infoJson.release_date ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fa fa-calendar-alt", style: "color:var(--muted);font-size:1em;" }),
+          humanizeDate(infoJson.release_date)
+        ) : null
+      )
     );
   }
 
