@@ -9,7 +9,8 @@ const routes = {
   "#/stats": renderStats,
   "#/playlists": renderPlaylists,
   "#/playlist": renderPlaylistDetail,
-  "#/watch": renderWatch
+  "#/watch": renderWatch,
+  "#/moments": renderMoments
 };
 
 // --- Watch Page ---
@@ -18,6 +19,7 @@ async function renderWatch() {
   const relPath = params.relPath;
   const channel = params.channel;
   const title = params.title;
+  const timestamp = params.timestamp ? Number(params.timestamp) : null;
   if (!relPath || !channel || !title) {
     return renderLayout(h("div", { class: "notice" }, "Invalid video info."));
   }
@@ -170,6 +172,7 @@ async function renderWatch() {
       h("div", { style: "width:100%;max-width:1100px;margin:0 auto;" },
         h("div", { style: "background:var(--card);border-radius:18px;box-shadow:none;padding:40px 48px 40px 48px;margin-bottom:32px;" },
           h("video", {
+            id: "main-video-player",
             src: videoUrl(video.relPath),
             controls: true,
             style: "width:100%;max-height:80vh;border-radius:14px;background:black;"
@@ -192,10 +195,97 @@ async function renderWatch() {
             h("div", { style: "color:var(--muted);margin-top:12px;font-size:1.1em;" },
               `Modified: ${fmtDate(video.mtime)} | Size: ${fmtSize(video.size)}`
             ),
-            infoSection
+            infoSection,
+            h("button", {
+              style: "margin-top:18px;padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
+              onclick: async () => {
+                const player = document.getElementById("main-video-player");
+                if (!player) return;
+                const ts = Math.floor(player.currentTime);
+                const title = prompt("Moment title:", "Interesting part");
+                if (!title) return;
+                await fetch("/api/moments", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ relPath: video.relPath, timestamp: ts, title })
+                });
+                alert("Moment saved!");
+              }
+            }, h("i", { class: "fa-solid fa-bookmark", style: "margin-right:8px;" }), "Bookmark Moment")
           )
         )
       )
+    )
+  );
+  // If timestamp param is present, seek to that time after video loads
+  if (timestamp) {
+    setTimeout(() => {
+      const player = document.getElementById("main-video-player");
+      if (player) player.currentTime = timestamp;
+    }, 600);
+  }
+}
+
+// Utility: format seconds as mm:ss
+function formatTimestamp(ts) {
+  const min = Math.floor(ts / 60);
+  const sec = ts % 60;
+  return `${min}:${sec.toString().padStart(2, "0")}`;
+}
+
+// --- Moments Page ---
+async function renderMoments() {
+  const params = parseHashParams();
+  const page = Number(params.page || 1);
+  const pageSize = 20;
+  const resp = await api(`/api/moments?page=${page}&pageSize=${pageSize}`);
+  const moments = resp.data;
+  const totalPages = resp.totalPages;
+  // Group by video
+  const byVideo = {};
+  for (const m of moments) {
+    if (!byVideo[m.relPath]) byVideo[m.relPath] = [];
+    byVideo[m.relPath].push(m);
+  }
+  const videoKeys = Object.keys(byVideo);
+  renderLayout(
+    h("div", { style: "max-width:700px;margin:0 auto;" },
+      h("div", { class: "notice", style: "font-size:1.2em;font-weight:700;margin-bottom:18px;" }, "Bookmarked Moments"),
+      videoKeys.length === 0 ? h("div", { class: "notice" }, "No moments saved yet.") :
+      videoKeys.map(relPath =>
+        h("div", { style: "margin-bottom:28px;background:var(--card);border-radius:12px;padding:18px 20px;" },
+          h("div", { style: "font-weight:700;font-size:1.08em;margin-bottom:10px;" }, formatTitle(relPath.split("/").pop())),
+          byVideo[relPath].map(m =>
+            h("div", { style: "margin-bottom:10px;display:flex;align-items:center;gap:10px;" },
+              h("button", {
+                style: "background:var(--brand);color:var(--card);border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-weight:700;",
+                onclick: () => {
+                  const channel = relPath.split("/")[0];
+                  const title = formatTitle(relPath.split("/").pop());
+                  location.hash = `#/watch?relPath=${encodeURIComponent(relPath)}&channel=${encodeURIComponent(channel)}&title=${encodeURIComponent(title)}&timestamp=${m.timestamp}`;
+                }
+              }, h("i", { class: "fa-solid fa-play", style: "margin-right:6px;" }),
+                `Play @ ${formatTimestamp(m.timestamp)}`),
+              h("div", { style: "font-weight:600;" }, m.title),
+              h("button", {
+                style: "background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;",
+                title: "Delete moment",
+                onclick: async () => {
+                  if (confirm("Delete this moment?")) {
+                    await fetch("/api/moments", {
+                      method: "DELETE",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ relPath, timestamp: m.timestamp })
+                    });
+                    onRoute();
+                  }
+                }
+              }, h("i", { class: "fa-solid fa-trash" }))
+            )
+          )
+        )
+      ),
+      pagination({ page, totalPages }, (p) => { location.hash = `#/moments?page=${p}`; })
     )
   );
 }
@@ -223,10 +313,19 @@ async function loadFavs() {
 // --- Playlists ---
 async function loadPlaylists() {
   try {
-    const playlists = await api("/api/playlists");
-    state.playlists = playlists;
+    const params = state.playlistsPage ? `?page=${state.playlistsPage}&pageSize=${state.playlistsPageSize}` : '';
+    const resp = await api(`/api/playlists${params}`);
+    state.playlists = resp.data || [];
+    state.playlistsTotal = resp.total || 0;
+    state.playlistsPage = resp.page || 1;
+    state.playlistsPageSize = resp.pageSize || 20;
+    state.playlistsTotalPages = resp.totalPages || 1;
   } catch {
     state.playlists = [];
+    state.playlistsTotal = 0;
+    state.playlistsPage = 1;
+    state.playlistsPageSize = 20;
+    state.playlistsTotalPages = 1;
   }
 }
 
@@ -401,7 +500,11 @@ function renderLayout(content){
         tab([
           h("i", { class: "fa-solid fa-chart-column", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
           "Stats"
-        ], location.hash.startsWith("#/stats"), () => location.hash = "#/stats")
+        ], location.hash.startsWith("#/stats"), () => location.hash = "#/stats"),
+        tab([
+          h("i", { class: "fa-solid fa-bookmark", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
+          "Moments"
+        ], location.hash.startsWith("#/moments"), () => location.hash = "#/moments")
       ),
       h("div", { style: "flex:1" }), // spacer to push buttons to end
       h("button", {
@@ -425,7 +528,7 @@ function renderLayout(content){
             alert("Failed to surprise you: " + err.message);
           }
         }
-      }, h("i", { class: "fa-solid fa-face-surprise", style: "font-size:18px;color:var(--brand);" })),
+      }, h("i", { class: "fa-solid fa-face-surprise", style: "font-size:16px;" })),
       h("button", {
         class: "circle-btn",
         onclick: cleanupThumbs,
@@ -563,8 +666,12 @@ async function renderHome() {
 
 // --- Playlists List View ---
 async function renderPlaylists() {
+  state.playlistsPage = state.playlistsPage || 1;
+  state.playlistsPageSize = state.playlistsPageSize || 20;
   await loadPlaylists();
   const playlists = state.playlists;
+  const page = state.playlistsPage;
+  const totalPages = state.playlistsTotalPages;
   const list = h("div", { style: "max-width:500px;margin:0 auto;" },
     h("div", { class: "notice" }, "Your Playlists"),
     h("div", {},
@@ -604,6 +711,29 @@ async function renderPlaylists() {
                 }
               }, h("i", { class: "fa-solid fa-trash" }))
             )
+          ),
+          h("div", { style: "display:flex;gap:8px;justify-content:center;margin:18px 0;" },
+            h("button", {
+              style: `padding:6px 14px;border-radius:8px;border:none;background:${page > 1 ? 'var(--brand)' : '#444'};color:var(--card);cursor:${page > 1 ? 'pointer' : 'not-allowed'};`,
+              disabled: page <= 1,
+              onclick: () => {
+                if (page > 1) {
+                  state.playlistsPage = page - 1;
+                  onRoute();
+                }
+              }
+            }, "Previous"),
+            h("span", { style: "align-self:center;" }, `Page ${page} of ${totalPages}`),
+            h("button", {
+              style: `padding:6px 14px;border-radius:8px;border:none;background:${page < totalPages ? 'var(--brand)' : '#444'};color:var(--card);cursor:${page < totalPages ? 'pointer' : 'not-allowed'};`,
+              disabled: page >= totalPages,
+              onclick: () => {
+                if (page < totalPages) {
+                  state.playlistsPage = page + 1;
+                  onRoute();
+                }
+              }
+            }, "Next")
           )
         ) : h("div", { class: "notice" }, "No playlists yet.")
     )
@@ -816,7 +946,7 @@ function cardVideo(v, onPlay) {
         alt: formatted
       }),
       h("span", {
-        style: "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.45);border-radius:50%;padding:10px;display:flex;align-items:center;justify-content:center;pointer-events:none;"
+        style: "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;padding:10px;display:flex;align-items:center;justify-content:center;pointer-events:none;"
       },
         h("i", { class: "fa-solid fa-play", style: "font-size:28px;color:var(--brand);" })
       )
