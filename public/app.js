@@ -72,22 +72,29 @@ async function renderWatch() {
   let infoSection = null;
   if (infoJson) {
     let expanded = false;
-    // Helper to humanize numbers
-    function humanizeNumber(n) {
+    // Helper to humanize numbers with label
+    function humanizeNumber(n, label) {
       if (typeof n !== 'number') return '';
-      if (n < 1000) return n;
-      if (n < 1000000) return (n/1000).toFixed(1).replace(/\.0$/, '') + 'K';
-      return (n/1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+      let val = '';
+      if (n < 1000) val = n;
+      else if (n < 1000000) val = (n/1000).toFixed(1).replace(/\.0$/, '') + 'K';
+      else val = (n/1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+      return `${val} ${label}`;
     }
-    // Helper to humanize date
+    // Helper to format date as '15-Aug-2025'
     function humanizeDate(d) {
       if (!d) return '';
       if (/^\d{8}$/.test(d)) {
         // YYYYMMDD
-        return d.slice(6,8) + '-' + d.slice(4,6) + '-' + d.slice(0,4);
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const day = d.slice(6,8);
+        const month = months[parseInt(d.slice(4,6),10)-1];
+        const year = d.slice(0,4);
+        return `${day}-${month}-${year}`;
       }
       return d;
     }
+    let descExpanded = false;
     infoSection = h("div", { style: "margin-top:28px;" },
       h("div", {
         style: "font-weight:600;font-size:1.08em;cursor:pointer;padding:10px 0;color:var(--brand);user-select:none;",
@@ -100,35 +107,53 @@ async function renderWatch() {
       h("div", {
         style: "display:none;background:rgba(0,0,0,0.04);border-radius:10px;padding:16px 18px;margin-top:6px;color:var(--text);font-size:1em;"
       },
-        // Description
-        infoJson.description ? h("div", { style: "margin-bottom:16px;white-space:pre-line;" }, infoJson.description) : null,
+        // Description (expand/collapse)
+        infoJson.description ? h("div", { style: "margin-bottom:10px;" },
+          h("div", {
+            style: "font-weight:500;font-size:1em;cursor:pointer;color:var(--brand);user-select:none;margin-bottom:6px;",
+            onclick: function() {
+              descExpanded = !descExpanded;
+              this.nextSibling.style.display = descExpanded ? "block" : "none";
+              this.innerText = descExpanded ? "Hide Description ▲" : "Show Description ▼";
+            }
+          }, "Show Description ▼"),
+          h("div", {
+            style: "display:none;white-space:pre-line;margin-bottom:10px;"
+          }, infoJson.description),
+          h("hr", { style: "border:none;border-top:1px solid var(--muted);margin:10px 0 18px 0;" })
+        ) : null,
+        // Youtube video link
+        infoJson.webpage_url ? h("div", { style: "margin-bottom:10px;display:flex;align-items:center;gap:8px;" },
+          h("i", { class: "fab fa-youtube", style: "color:#ff0000;font-size:1.2em;" }),
+          h("a", { href: infoJson.webpage_url, target: "_blank", style: "color:var(--brand);font-weight:600;text-decoration:none;" }, "Youtube video")
+        ) : null,
         // Channel URL
         infoJson.channel_url ? h("div", { style: "margin-bottom:10px;display:flex;align-items:center;gap:8px;" },
           h("i", { class: "fab fa-youtube", style: "color:#ff0000;font-size:1.2em;" }),
-          h("a", { href: infoJson.channel_url, target: "_blank", style: "color:var(--brand);font-weight:600;text-decoration:none;" }, "Channel on YouTube")
+          h("a", { href: infoJson.channel_url, target: "_blank", style: "color:var(--brand);font-weight:600;text-decoration:none;" }, `${infoJson.channel || 'Channel'} on Youtube`)
         ) : null,
         // View count
         typeof infoJson.view_count === 'number' ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
           h("i", { class: "fa fa-eye", style: "color:var(--muted);font-size:1em;" }),
-          humanizeNumber(infoJson.view_count),
-          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "At the time of download")
+          humanizeNumber(infoJson.view_count, 'Views'),
+          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "(At the time of download)")
         ) : null,
         // Like count
         typeof infoJson.like_count === 'number' ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
           h("i", { class: "fa fa-thumbs-up", style: "color:var(--brand);font-size:1em;" }),
-          humanizeNumber(infoJson.like_count),
-          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "At the time of download")
+          humanizeNumber(infoJson.like_count, 'Likes'),
+          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "(At the time of download)")
         ) : null,
         // Channel follower count
         typeof infoJson.channel_follower_count === 'number' ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
           h("i", { class: "fa fa-users", style: "color:var(--brand-2);font-size:1em;" }),
-          humanizeNumber(infoJson.channel_follower_count),
-          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "At the time of download")
+          humanizeNumber(infoJson.channel_follower_count, 'Subscribers'),
+          h("span", { style: "color:var(--muted);font-size:0.95em;margin-left:4px;" }, "(At the time of download)")
         ) : null,
         // Release date
         infoJson.release_date ? h("div", { style: "margin-bottom:8px;display:flex;align-items:center;gap:8px;" },
           h("i", { class: "fa fa-calendar-alt", style: "color:var(--muted);font-size:1em;" }),
-          humanizeDate(infoJson.release_date)
+          `Uploaded on ${humanizeDate(infoJson.release_date)}`
         ) : null
       )
     );
