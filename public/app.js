@@ -201,14 +201,13 @@ async function renderWatch() {
             h("div", { style: "color:var(--muted);margin-top:12px;font-size:1.1em;" },
               `Modified: ${fmtDate(video.mtime)} | Size: ${fmtSize(video.size)}`
             ),
-            infoSection,
             h("button", {
               style: "margin-top:18px;padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
               onclick: async () => {
                 const player = document.getElementById("main-video-player");
                 if (!player) return;
                 const ts = Math.floor(player.currentTime);
-                const title = prompt("Moment title:", "Interesting part");
+                const title = prompt("Moment at "+ts+"s title:");
                 if (!title) return;
                 await fetch("/api/moments", {
                   method: "POST",
@@ -217,7 +216,8 @@ async function renderWatch() {
                 });
                 alert("Moment saved!");
               }
-            }, h("i", { class: "fa-solid fa-bookmark", style: "margin-right:8px;" }), "Bookmark Moment")
+            }, h("i", { class: "fa-solid fa-hand-point-up", style: "margin-right:8px;" }), "Add Moment"),
+            infoSection
           )
         )
       )
