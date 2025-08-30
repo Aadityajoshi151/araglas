@@ -139,7 +139,7 @@ async function renderWatch() {
         // Youtube video link
         infoJson.webpage_url ? h("div", { style: "margin-bottom:10px;display:flex;align-items:center;gap:8px;" },
           h("i", { class: "fab fa-youtube", style: "color:#ff0000;font-size:1.2em;" }),
-          h("a", { href: infoJson.webpage_url, target: "_blank", style: "color:var(--brand);font-weight:600;text-decoration:none;" }, "Youtube video")
+          h("a", { href: infoJson.webpage_url, target: "_blank", style: "color:var(--brand);font-weight:600;text-decoration:none;" }, "Watch this video on Youtube")
         ) : null,
         // Channel URL
         infoJson.channel_url ? h("div", { style: "margin-bottom:10px;display:flex;align-items:center;gap:8px;" },
