@@ -444,116 +444,76 @@ function videoUrl(relPath){
 
 // --- layout & header ---
 function renderLayout(content){
+
   const app = $("#app");
   app.innerHTML = "";
-  const container = h("div", { class: "container" },
-    h("div", { class: "header" },
-      h("div", { class: "brand" },
-        h("img", { class: "logo", src: "/icons/araglas.png", alt: "Araglas Logo" }),
-        h("div", {}, "Araglas")
-      ),
-      h("div", { class: "searchbar", style: "display:flex;align-items:center;position:relative;" },
-        h("input", {
-          placeholder: "Search videos…",
-          value: state.query,
-          style: "flex:1;",
-          oninput: (e)=> { state.query = e.target.value; },
-          onkeydown: (e)=>{
-            if (e.key === "Enter") {
-              if (!state.query.trim()) {
-                alert("Please enter a search query.");
-                return;
-              }
-              location.hash = `#/search?q=${encodeURIComponent(state.query)}&page=1`;
-            }
-          }
-        }),
-        h("button", {
-          style: "position:absolute;right:6px;background:none;border:none;cursor:pointer;padding:0 8px;font-size:18px;color:var(--muted);height:100%;display:flex;align-items:center;",
-          onclick: () => {
-            state.query = "";
-            const input = document.querySelector('.searchbar input');
-            if (input) {
-              input.value = "";
-              input.focus();
-            }
-          },
-          title: "Clear search"
-        }, h("i", { class: "fa-solid fa-xmark" }))
-      )
+
+
+  // Bootstrap-style navbar
+  const navbar = h("nav", { class: "navbar navbar-expand-lg navbar-light bg-light", style: "border-bottom:1px solid #e5e5e5;" },
+    h("a", { class: "navbar-brand", href: "#/" },
+      h("img", { src: "/icons/araglas.png", alt: "Araglas Logo", style: "height:32px;margin-right:10px;vertical-align:middle;" }),
+      "Araglas"
     ),
-    h("div", { class: "tabs-row" },
-      h("div", { class: "tabs" },
-        tab([
-          h("i", { class: "fa-solid fa-house", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Home"
-        ], ["", "#/"].includes(location.hash), () => location.hash = "#/"),
-        tab([
-          h("i", { class: "fa-solid fa-layer-group", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Channels"
-        ], location.hash.startsWith("#/channels"), () => location.hash = "#/channels"),
-        tab([
-          h("i", { class: "fa-solid fa-heart", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Favorites"
-        ], location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites"),
-        tab([
-          h("i", { class: "fa-solid fa-list", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Playlists"
-        ], location.hash.startsWith("#/playlists"), () => location.hash = "#/playlists"),
-        tab([
-          h("i", { class: "fa-solid fa-chart-column", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Stats"
-        ], location.hash.startsWith("#/stats"), () => location.hash = "#/stats"),
-        tab([
-          h("i", { class: "fa-solid fa-bookmark", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Moments"
-        ], location.hash.startsWith("#/moments"), () => location.hash = "#/moments")
+    h("button", {
+      class: "navbar-toggler",
+      type: "button",
+      "data-toggle": "collapse",
+      "data-target": "#navbarSupportedContent",
+      "aria-controls": "navbarSupportedContent",
+      "aria-expanded": "false",
+      "aria-label": "Toggle navigation"
+    }, h("span", { class: "navbar-toggler-icon" })),
+    h("div", { class: "collapse navbar-collapse", id: "navbarSupportedContent" },
+      h("ul", { class: "navbar-nav mr-auto" },
+        h("li", { class: "nav-item" }, h("a", { class: "nav-link", href: "#/" }, "Home")),
+        h("li", { class: "nav-item" }, h("a", { class: "nav-link", href: "#/channels" }, "Channels")),
+        h("li", { class: "nav-item" }, h("a", { class: "nav-link", href: "#/favorites" }, "Favorites")),
+        h("li", { class: "nav-item" }, h("a", { class: "nav-link", href: "#/playlists" }, "Playlists")),
+        h("li", { class: "nav-item" }, h("a", { class: "nav-link", href: "#/stats" }, "Stats")),
+        h("li", { class: "nav-item" }, h("a", { class: "nav-link", href: "#/moments" }, "Moments")),
+        h("li", { class: "nav-item dropdown" },
+          h("a", {
+            class: "nav-link dropdown-toggle",
+            href: "#",
+            id: "navbarDropdown",
+            role: "button",
+            "data-toggle": "dropdown",
+            "aria-haspopup": "true",
+            "aria-expanded": "false"
+          }, "Actions"),
+          h("div", { class: "dropdown-menu", "aria-labelledby": "navbarDropdown" },
+            h("a", { class: "dropdown-item", href: "#", onclick: async (e) => { e.preventDefault(); await surpriseMe(); } }, h("i", { class: "fa-solid fa-face-surprise", style: "margin-right:8px;" }), "Surprise Me"),
+            h("a", { class: "dropdown-item", href: "#", onclick: async (e) => { e.preventDefault(); await cleanupThumbs(); } }, h("i", { class: "fa-solid fa-broom", style: "margin-right:8px;" }), "Remove Thumbnails"),
+            h("a", { class: "dropdown-item", href: "#", onclick: async (e) => { e.preventDefault(); await manualRescan(); } }, h("i", { class: "fa-solid fa-arrows-rotate", style: "margin-right:8px;" }), "Rescan Library"),
+            h("a", { class: "dropdown-item", href: "#", onclick: (e) => { e.preventDefault(); toggleTheme(); } }, h("i", { class: "fa-solid fa-circle-half-stroke", style: "margin-right:8px;" }), "Toggle Theme")
+          )
+        )
       ),
-      h("div", { style: "flex:1" }), // spacer to push buttons to end
-      h("button", {
-        class: "circle-btn",
-        style: "margin-right:8px;",
-        title: "Surprise Me",
-        onclick: async () => {
-          try {
-            const channelsData = await api("/api/channels?page=1&pageSize=96");
-            const channels = channelsData.data;
-            if (!channels.length) return alert("No channels found.");
-            const randChannel = channels[Math.floor(Math.random() * channels.length)];
-            const channelId = randChannel.id;
-            const channelName = randChannel.name;
-            const videosData = await api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=1&pageSize=96`);
-            const videos = videosData.data;
-            if (!videos.length) return alert("No videos found in channel.");
-            const randVideo = videos[Math.floor(Math.random() * videos.length)];
-            location.hash = `#/watch?relPath=${encodeURIComponent(randVideo.relPath)}&channel=${encodeURIComponent(channelName)}&title=${encodeURIComponent(randVideo.name)}`;
-          } catch (err) {
-            alert("Failed to surprise you: " + err.message);
-          }
+      h("form", {
+        class: "form-inline my-2 my-lg-0",
+        onsubmit: (e) => {
+          e.preventDefault();
+          location.hash = `#/search?q=${encodeURIComponent(state.query)}&page=1`;
         }
-      }, h("i", { class: "fa-solid fa-face-surprise", style: "font-size:16px;" })),
-      h("button", {
-        class: "circle-btn",
-        onclick: cleanupThumbs,
-        title: "Remove thumbnails for deleted videos"
       },
-        h("i", { class: "fa-solid fa-broom", style: "font-size:16px;" })
-      ),
-      h("button", {
-        class: "circle-btn",
-        onclick: manualRescan,
-        title: "Rescan library"
-      }, h("i", { class: "fa-solid fa-arrows-rotate", style: "font-size:16px;" })),
-      h("button", {
-        class: "circle-btn",
-        id: "theme-toggle-btn",
-        title: "Toggle theme",
-        onclick: toggleTheme
-      }, h("i", { class: "fa-solid fa-circle-half-stroke", style: "font-size:16px;" }))
-    ),
-    content
+        h("input", {
+          class: "form-control mr-sm-2",
+          type: "search",
+          placeholder: "Search",
+          "aria-label": "Search",
+          value: state.query,
+          oninput: (e) => { state.query = e.target.value; }
+        }),
+        h("button", { class: "btn btn-outline-danger my-2 my-sm-0", type: "submit" }, "Search")
+      )
+    )
   );
-  app.append(container);
+
+  // Main content area
+  const mainContent = h("div", { class: "container yt-main" }, content);
+  app.append(navbar);
+  app.append(mainContent);
   ensurePlayer();
 // --- Theme logic ---
 async function getThemeSetting() {
@@ -654,7 +614,7 @@ async function renderHome() {
   // Fetch all videos, sorted by date (like empty search)
   const data = await api(`/api/search?q=&page=${page}&pageSize=${pageSize}`);
   const videos = data.data || []; // Defensive: fallback to empty array
-  const grid = h("div", { class: "grid" },
+  const grid = h("div", { class: "yt-video-grid" },
     videos.map(v => cardVideo(v, () => openPlayer(videoUrl(v.relPath), v.name, v.channel)))
   );
   renderLayout(
@@ -860,7 +820,7 @@ async function renderFavorites() {
   if (!favList.length) {
     return renderLayout(h("div", { class: "notice" }, "No favorites yet."));
   }
-  const grid = h("div", { class: "grid" },
+  const grid = h("div", { class: "yt-video-grid" },
     favList.map(item => cardVideo(item, () => openPlayer(videoUrl(item.relPath), item.name, item.channel)))
   );
   renderLayout(grid);
@@ -941,24 +901,17 @@ function cardVideo(v, onPlay) {
     location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(formatTitle(v.name))}`;
   }
 
-  return h("div", { class: "card", onclick: goToWatch },
-    h("div", { style: "position:relative;" },
-      h("img", {
-        class: "thumb lazy",
-        "data-src": videoThumb(v.relPath),
-        alt: formatted
-      }),
-      h("span", {
-        style: "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;padding:10px;display:flex;align-items:center;justify-content:center;pointer-events:none;"
-      },
-        h("i", { class: "fa-solid fa-play", style: "font-size:28px;color:var(--brand);" })
-      )
-    ),
-    h("div", { class: "card-body" },
-      h("div", { class: "card-title", title: formatted }, showTitle),
-      h("div", { class: "card-sub" }, infoLine),
-      h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
-      h("div", { style: "display:flex;gap:8px;align-items:center;" },
+  return h("div", { class: "yt-video-card", onclick: goToWatch },
+    h("img", {
+      class: "yt-video-thumb lazy",
+      "data-src": videoThumb(v.relPath),
+      alt: formatted
+    }),
+    h("div", { class: "yt-video-info" },
+      h("div", { class: "yt-video-title", title: formatted }, showTitle),
+      h("div", { class: "yt-video-meta" }, infoLine),
+      h("div", { class: "yt-video-meta" }, v.size ? fmtSize(v.size) : ""),
+      h("div", { class: "yt-video-actions" },
         h("button", {
           class: `icon-btn fav-btn`,
           onclick: (e) => { e.stopPropagation(); toggleFav(e, v); },
