@@ -181,6 +181,7 @@ async function renderWatch() {
             id: "main-video-player",
             src: videoUrl(video.relPath),
             controls: true,
+            autoplay: true,
             style: "width:100%;max-height:80vh;border-radius:14px;background:black;"
           }),
           h("div", { style: "margin-top:32px;" },
@@ -1130,7 +1131,9 @@ function ensurePlayer(){
   document.body.append(
     h("div", { class: "player", id:"player" },
       h("div", { class:"player-inner" },
-        h("video", { id:"player-video", controls: true }),
+        h("video", { id:"player-video", controls: true
+
+         }),
         h("div", { style:"display:flex; align-items:center; justify-content:space-between; padding:10px 12px" },
           h("div", { id:"player-title", style:"font-weight:700" }, ""),
           h("button", { class:"icon-btn", onclick: closePlayer }, "Close")
