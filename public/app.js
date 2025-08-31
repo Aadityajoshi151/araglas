@@ -202,22 +202,31 @@ async function renderWatch() {
             h("div", { style: "color:var(--muted);margin-top:12px;font-size:1.1em;" },
               `Modified: ${fmtDate(video.mtime)} | Size: ${fmtSize(video.size)}`
             ),
-            h("button", {
-              style: "margin-top:18px;padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
-              onclick: async () => {
-                const player = document.getElementById("main-video-player");
-                if (!player) return;
-                const ts = Math.floor(player.currentTime);
-                const title = prompt("Moment at "+ts+"s title:");
-                if (!title) return;
-                await fetch("/api/moments", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ relPath: video.relPath, timestamp: ts, title })
-                });
-                alert("Moment saved!");
-              }
-            }, h("i", { class: "fa-solid fa-hand-point-up", style: "margin-right:8px;" }), "Add Moment"),
+            h("div", { style: "display:flex;gap:12px;align-items:center;margin-top:18px;" },
+              h("button", {
+                style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
+                onclick: async () => {
+                  const player = document.getElementById("main-video-player");
+                  if (!player) return;
+                  const ts = Math.floor(player.currentTime);
+                  const title = prompt("Moment at "+ts+"s title:");
+                  if (!title) return;
+                  await fetch("/api/moments", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ relPath: video.relPath, timestamp: ts, title })
+                  });
+                  alert("Moment saved!");
+                }
+              }, h("i", { class: "fa-solid fa-hand-point-up", style: "margin-right:8px;" }), "Add Moment"),
+              h("button", {
+                style: "padding:10px 18px;border-radius:8px;background:var(--brand-2);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
+                onclick: (e) => {
+                  e.preventDefault();
+                  showPlaylistModal(video);
+                }
+              }, h("i", { class: "fa-solid fa-list", style: "margin-right:8px;" }), "Add to Playlist")
+            ),
             infoSection
           )
         )
