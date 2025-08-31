@@ -207,7 +207,7 @@ async function renderWatch() {
                 }
               }, h("i", { class: "fa-solid fa-hand-point-up", style: "margin-right:8px;" }), "Add Moment"),
               h("button", {
-                style: "padding:10px 18px;border-radius:8px;background:var(--brand-2);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
+                style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
                 onclick: (e) => {
                   e.preventDefault();
                   showPlaylistModal(video);

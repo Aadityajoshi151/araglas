@@ -1,15 +1,16 @@
 /* Light Theme CSS */
+/* YouTube-inspired light theme */
 :root{
-  --bg: #f7f3e8;
-  --card: #fdf6e3;
-  --muted: #a89c7c;
-  --text: #3b2f1e;
-  --brand: #c9a86a;
-  --brand-2: #b7c97a;
-  --ring: rgba(201, 168, 106, 0.18);
+  --bg: #fff;
+  --card: #fff;
+  --muted: #606060;
+  --text: #181818;
+  --brand: #ff0000;
+  --brand-2: #c00;
+  --ring: rgba(255,0,0,0.12);
 }
 body{
-  background: radial-gradient(1200px 800px at 70% -10%, #f5ecd7 0%, var(--bg) 60%);
+  background: #fff;
   color: var(--text);
 }
 .container{
@@ -34,12 +35,18 @@ body{
 .searchbar input{
   width: min(70vw, 480px);
   padding: 12px 14px;
-  border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04); color: var(--text);
+  border-radius: 14px;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  color: var(--text);
   outline: none;
   transition: box-shadow .2s, border-color .2s;
 }
-.searchbar input:focus{ box-shadow: 0 0 0 6px var(--ring); border-color: var(--brand) }
+.searchbar input:focus{
+  box-shadow: 0 0 0 6px var(--ring);
+  border-color: var(--brand);
+  background: #fff;
+}
 .pill{
   display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px;
   border-radius: 999px; background: rgba(124, 240, 255, .1); border: 1px solid rgba(124, 240, 255, .2);
@@ -51,7 +58,10 @@ body{
   padding: 8px 12px; border-radius: 10px; cursor: pointer;
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
 }
-.tab.active{ background: rgba(124,240,255,.1); border-color: rgba(124,240,255,.25) }
+.tab.active{
+  background: rgba(255,0,0,0.12);
+  border-color: #ff0000;
+}
 
 .grid {
   display: grid;
@@ -63,17 +73,16 @@ body{
 .card {
   background: var(--card);
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  /* box-shadow removed */
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: box-shadow 0.2s;
+  transition: background 0.2s;
   cursor: pointer;
 }
 
 .card:hover {
-  box-shadow: 0 4px 24px rgba(124,240,255,0.12);
-  background: rgba(124,240,255,0.04);
+  background: rgba(255,0,0,0.04);
 }
 
 .thumb {
@@ -255,8 +264,8 @@ body{
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(124,240,255,.12);
-  border: 1px solid rgba(124,240,255,.25);
+  background: rgba(255,0,0,0.12);
+  border: 1px solid #ff0000;
   color: var(--brand);
   font-weight: bold;
   font-size: 1.2rem;
@@ -270,5 +279,5 @@ body{
 .circle-btn:hover {
   background: var(--brand);
   color: var(--card);
-  box-shadow: 0 2px 12px rgba(124,240,255,0.18);
+  box-shadow: 0 2px 12px rgba(255,0,0,0.18);
 }

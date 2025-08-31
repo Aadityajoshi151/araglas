@@ -1,19 +1,20 @@
+/* YouTube-inspired dark theme */
 :root{
-  --bg: #0b0f14;
-  --card: #101722;
-  --muted: #8aa0b4;
-  --text: #eaf2fb;
-  --brand: #7cf0ff;
-  --brand-2: #7fff9b;
-  --ring: rgba(124, 240, 255, 0.35);
+  --bg: #181818;
+  --card: #212121;
+  --muted: #aaaaaa;
+  --text: #fff;
+  --brand: #ff0000;
+  --brand-2: #c00;
+  --ring: rgba(255,0,0,0.18);
 }
 *{ box-sizing: border-box }
 html,body,#app{ height: 100% }
 body{
   margin: 0;
-  background: radial-gradient(1200px 800px at 70% -10%, #112131 0%, var(--bg) 60%);
+  background: #181818;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  font-family: Roboto, Arial, Helvetica, sans-serif;
 }
 
 .container{
@@ -55,7 +56,10 @@ body{
   padding: 8px 12px; border-radius: 10px; cursor: pointer;
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
 }
-.tab.active{ background: rgba(124,240,255,.1); border-color: rgba(124,240,255,.25) }
+.tab.active{
+  background: rgba(255,0,0,0.12);
+  border-color: #ff0000;
+}
 
 .grid {
   display: grid;
@@ -67,17 +71,16 @@ body{
 .card {
   background: var(--card);
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  /* box-shadow removed */
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: box-shadow 0.2s;
+  transition: background 0.2s;
   cursor: pointer;
 }
 
 .card:hover {
-  box-shadow: 0 4px 24px rgba(124,240,255,0.12);
-  background: rgba(124,240,255,0.04);
+  background: rgba(255,0,0,0.04);
 }
 
 .thumb {
@@ -259,8 +262,8 @@ body{
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(124,240,255,.12);
-  border: 1px solid rgba(124,240,255,.25);
+  background: rgba(255,0,0,0.12);
+  border: 1px solid #ff0000;
   color: var(--brand);
   font-weight: bold;
   font-size: 1.2rem;
@@ -274,5 +277,5 @@ body{
 .circle-btn:hover {
   background: var(--brand);
   color: var(--card);
-  box-shadow: 0 2px 12px rgba(124,240,255,0.18);
+  box-shadow: 0 2px 12px rgba(255,0,0,0.18);
 }
