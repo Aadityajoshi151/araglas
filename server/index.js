@@ -131,10 +131,22 @@ app.get("/api/thumb", async (req, res) => {
   const absVideo = path.join(LIBRARY_DIR, relPath);
   if (!(await fs.pathExists(absVideo))) return res.status(404).end();
 
-  const outAbs = thumbPathFor(THUMBS_DIR, relPath);
-  if (!(await fs.pathExists(outAbs))) {
+  // Get base thumbnail path (no extension)
+  const outAbsBase = thumbPathFor(THUMBS_DIR, relPath);
+  // Try to find existing thumbnail with known extensions
+  const exts = [".jpg", ".png", ".webp"];
+  let outAbs = null;
+  for (const ext of exts) {
+    const candidate = outAbsBase + ext;
+    if (await fs.pathExists(candidate)) {
+      outAbs = candidate;
+      break;
+    }
+  }
+  // If not found, generate thumbnail and get its path
+  if (!outAbs) {
     try {
-      await makeThumb(FFMPEG, absVideo, outAbs);
+      outAbs = await makeThumb(FFMPEG, absVideo, outAbsBase);
     } catch {
       // fallback placeholder (1x1 transparent PNG)
       res.setHeader("Content-Type", "image/png");
@@ -145,6 +157,10 @@ app.get("/api/thumb", async (req, res) => {
       return res.end(buf);
     }
   }
+  // Set correct content-type
+  if (outAbs.endsWith('.png')) res.setHeader('Content-Type', 'image/png');
+  else if (outAbs.endsWith('.webp')) res.setHeader('Content-Type', 'image/webp');
+  else res.setHeader('Content-Type', 'image/jpeg');
   res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
   return res.sendFile(outAbs);
 });
