@@ -60,12 +60,14 @@ export async function makeThumb(ffmpegPath, videoAbs, outAbsBase) {
   const outAbs = outAbsBase + thumbExt;
   let extracted = false;
   if (attachedPicIndex !== null) {
+    // Step 1: Extract the embedded thumbnail to a temp file
+    const tempThumb = outAbsBase + '.orig' + thumbExt;
     const extractArgs = [
       "-y",
       "-i", videoAbs,
       "-map", `0:${attachedPicIndex}`,
       "-c", "copy",
-      outAbs
+      tempThumb
     ];
     await new Promise((resolve) => {
       const p = spawn(ffmpegPath, extractArgs);
@@ -73,17 +75,41 @@ export async function makeThumb(ffmpegPath, videoAbs, outAbsBase) {
       p.stderr.on("data", d => (err += d.toString()));
       p.on("close", code => {
         extracted = code === 0;
-        if (extracted) {
-          console.log(`[thumbs] Attached thumbnail extracted as ${thumbExt} for: ${videoAbs}`);
-        } else {
+        if (!extracted) {
           console.log(`[thumbs] Failed to extract attached thumbnail for: ${videoAbs}`);
           if (err) console.log(`[thumbs] ffmpeg error: ${err}`);
         }
         resolve();
       });
     });
-    // If attached_pic was detected but extraction failed, do NOT fallback, just return and log error
-    if (!extracted) {
+    // Step 2: If extracted, re-encode and resize to match generated thumbnail quality
+    if (extracted) {
+      // Always output as jpg for consistency
+      const resizeArgs = [
+        "-y",
+        "-i", tempThumb,
+        "-vf", "scale=480:-1",
+        "-q:v", "4",
+        outAbsBase + ".jpg"
+      ];
+      await new Promise((resolve) => {
+        const p = spawn(ffmpegPath, resizeArgs);
+        let err = "";
+        p.stderr.on("data", d => (err += d.toString()));
+        p.on("close", code => {
+          if (code === 0) {
+            console.log(`[thumbs] Embedded thumbnail resized and re-encoded for: ${videoAbs}`);
+          } else {
+            console.log(`[thumbs] Failed to resize/re-encode embedded thumbnail for: ${videoAbs}`);
+            if (err) console.log(`[thumbs] ffmpeg error: ${err}`);
+          }
+          resolve();
+        });
+      });
+      // Remove temp file
+      try { require('fs').unlinkSync(tempThumb); } catch {}
+      return outAbsBase + ".jpg";
+    } else {
       console.log(`[thumbs] Extraction failed for attached_pic stream, not falling back to frame extraction.`);
       return outAbs;
     }
