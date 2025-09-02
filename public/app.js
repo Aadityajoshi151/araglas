@@ -897,9 +897,47 @@ async function renderChannels() {
       cardChannel(c, ()=> location.hash = `#/channel?id=${encodeURIComponent(c.id)}&name=${encodeURIComponent(c.name)}`)
     )
   );
+  // Search bar UI (smaller, left of Channels, with clear button)
+  // Use the global searchbar style and logic, but for channels
+  let channelQuery = q;
+  let inputRef;
+  const searchBar = h("div", {
+    class: "searchbar",
+    style: "width:250px; margin-bottom:0; position:relative; display:flex; align-items:center;"
+  },
+    inputRef = h("input", {
+      type: "text",
+      placeholder: "Search channels…",
+      value: channelQuery,
+      class: "",
+      oninput: (e) => { channelQuery = e.target.value; },
+      onkeydown: (e) => {
+        if (e.key === "Enter") {
+          if (!channelQuery.trim()) {
+            alert("Please enter a channel name to search.");
+            return;
+          }
+          location.hash = `#/channels?page=1&pageSize=${pageSize}&q=${encodeURIComponent(channelQuery.trim())}`;
+        }
+      }
+    }),
+    h("button", {
+      style: "position:absolute;right:6px;background:none;border:none;cursor:pointer;padding:0 8px;font-size:18px;color:var(--muted);height:100%;display:flex;align-items:center;",
+      onclick: () => {
+        channelQuery = "";
+        inputRef.value = "";
+        inputRef.focus();
+        location.hash = `#/channels?page=1&pageSize=${pageSize}&q=`;
+      },
+      title: "Clear search"
+    }, h("i", { class: "fa-solid fa-xmark" }))
+  );
+
   renderLayout(
     h("div", {},
-      h("div", { class: "notice" }, "Channels"),
+      h("div", { style: "display:flex;justify-content:center;align-items:center;margin-bottom:18px;" },
+        searchBar
+      ),
       data.data.length ? grid : h("div", { class: "notice" }, "No channels found."),
       pagination(data, (p)=>{ location.hash = `#/channels?page=${p}&pageSize=${pageSize}&q=${encodeURIComponent(q)}`; })
     )

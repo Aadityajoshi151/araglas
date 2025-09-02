@@ -37,6 +37,7 @@ body{
   padding: 12px 14px;
   border-radius: 14px;
   border: 1.5px solid #ddd;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   background: #fff;
   color: var(--text);
   outline: none;
