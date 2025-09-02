@@ -782,7 +782,9 @@ async function renderPlaylistDetail() {
         class: "thumb lazy",
         "data-src": videoThumb(v.relPath),
         alt: v.name,
-        onclick: () => openPlayer(videoUrl(v.relPath), v.name, v.channel)
+        onclick: () => {
+          location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(formatTitle(v.name))}`;
+        }
       }),
       h("div", { class: "card-body" },
         h("div", { class: "card-title", title: v.name }, v.name.length > 25 ? v.name.slice(0, 22) + "..." : v.name),
@@ -1082,7 +1084,9 @@ function rowVideo(channelName, v) {
   const isFav = state.favorites.has(favKey);
   const formatted = formatTitle(v.name);
   return h("div", { class: "video-row" },
-    h("img", { class: "thumb lazy", "data-src": videoThumb(v.relPath), alt: formatted, onclick: ()=> openPlayer(videoUrl(v.relPath), formatted, channelName) }),
+    h("img", { class: "thumb lazy", "data-src": videoThumb(v.relPath), alt: formatted, onclick: ()=> {
+      location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(channelName)}&title=${encodeURIComponent(formatTitle(v.name))}`;
+    } }),
     h("div", {},
       h("div", { class: "video-title" }, formatted),
       h("div", { class: "video-meta" }, `${channelName} • ${fmtSize(v.size)} • ${fmtDate(v.mtime)}`),
