@@ -665,7 +665,7 @@ function tab(label, active, onClick){
 async function renderHome() {
   const params = parseHashParams();
   const page = Number(params.page || 1);
-  const pageSize = Number(params.pageSize || 16);
+  const pageSize = Number(params.pageSize || 15);
 
   // Fetch all videos, sorted by date (like empty search)
   const data = await api(`/api/search?q=&page=${page}&pageSize=${pageSize}`);
@@ -888,7 +888,7 @@ async function renderFavorites() {
 async function renderChannels() {
   const params = parseHashParams();
   const page = Number(params.page || 1);
-  const pageSize = Number(params.pageSize || 12);
+  const pageSize = Number(params.pageSize || 15);
   const q = params.q || "";
 
   const data = await api(`/api/channels?page=${page}&pageSize=${pageSize}&q=${encodeURIComponent(q)}`);
