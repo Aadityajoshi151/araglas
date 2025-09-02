@@ -307,7 +307,7 @@ app.delete("/api/favorites", express.json(), async (req, res) => {
 // Get all playlists
 app.get("/api/playlists", async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 20;
+  const pageSize = parseInt(req.query.pageSize) || 15;
   const pls = await readPlaylists();
   const total = pls.length;
   const start = (page - 1) * pageSize;
@@ -399,7 +399,7 @@ app.post("/api/rescan", async (req, res) => {
 app.get("/api/moments", async (req, res) => {
   const moments = await readMoments();
   const page = Number(req.query.page || 1);
-  const pageSize = Math.max(1, Math.min(96, Number(req.query.pageSize) || 20));
+  const pageSize = Math.max(1, Math.min(96, Number(req.query.pageSize) || 15));
   const total = moments.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const data = moments.slice((page-1)*pageSize, page*pageSize);

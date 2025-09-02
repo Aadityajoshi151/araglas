@@ -256,7 +256,7 @@ function formatTimestamp(ts) {
 async function renderMoments() {
   const params = parseHashParams();
   const page = Number(params.page || 1);
-  const pageSize = 20;
+  const pageSize = 15;
   const resp = await api(`/api/moments?page=${page}&pageSize=${pageSize}`);
   const moments = resp.data;
   const totalPages = resp.totalPages;
@@ -337,13 +337,13 @@ async function loadPlaylists() {
     state.playlists = resp.data || [];
     state.playlistsTotal = resp.total || 0;
     state.playlistsPage = resp.page || 1;
-    state.playlistsPageSize = resp.pageSize || 20;
+    state.playlistsPageSize = resp.pageSize || 15;
     state.playlistsTotalPages = resp.totalPages || 1;
   } catch {
     state.playlists = [];
     state.playlistsTotal = 0;
     state.playlistsPage = 1;
-    state.playlistsPageSize = 20;
+    state.playlistsPageSize = 15;
     state.playlistsTotalPages = 1;
   }
 }
@@ -470,7 +470,7 @@ function renderLayout(content){
       ),
       h("div", { class: "searchbar", style: "display:flex;align-items:center;position:relative;" },
         h("input", {
-          placeholder: "Search videos…",
+          placeholder: "Search videos across all channels…",
           value: state.query,
           style: "flex:1;",
           oninput: (e)=> { state.query = e.target.value; },
@@ -686,7 +686,7 @@ async function renderHome() {
 // --- Playlists List View ---
 async function renderPlaylists() {
   state.playlistsPage = state.playlistsPage || 1;
-  state.playlistsPageSize = state.playlistsPageSize || 20;
+  state.playlistsPageSize = state.playlistsPageSize || 15;
   await loadPlaylists();
   const playlists = state.playlists;
   const page = state.playlistsPage;
