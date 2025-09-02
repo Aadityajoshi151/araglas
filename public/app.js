@@ -213,6 +213,22 @@ async function renderWatch() {
                   showPlaylistModal(video);
                 }
               }, h("i", { class: "fa-solid fa-list", style: "margin-right:8px;" }), "Add to Playlist")
+              ,
+              h("button", {
+                style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
+                onclick: async (e) => {
+                  e.preventDefault();
+                  await addFav({
+                    relPath: video.relPath,
+                    name: video.name,
+                    channel: video.channel,
+                    channelId: channelId,
+                    mtime: video.mtime,
+                    size: video.size
+                  });
+                  alert("Added to Favorites!");
+                }
+              }, h("i", { class: "fa-solid fa-heart", style: "margin-right:8px;" }), "Add to Favorites")
             ),
             infoSection
           )
