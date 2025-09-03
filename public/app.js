@@ -505,11 +505,20 @@ function setTheme(theme) {
   window.currentTheme = theme;
 }
 
-window.toggleTheme = async function toggleTheme() {
-  const currentTheme = document.getElementById("theme-css-link")?.href.includes("app.light.css") ? "light" : "dark";
-  const newTheme = currentTheme === "dark" ? "light" : "dark";
-  applyTheme(newTheme);
-  await setThemeSetting(newTheme);
+window.toggleTheme = function toggleTheme() {
+  const darkLink = document.getElementById('theme-dark');
+  const lightLink = document.getElementById('theme-light');
+  if (darkLink.disabled) {
+    darkLink.disabled = false;
+    lightLink.disabled = true;
+    document.body.classList.remove('theme-light');
+    document.body.classList.add('theme-dark');
+  } else {
+    darkLink.disabled = true;
+    lightLink.disabled = false;
+    document.body.classList.remove('theme-dark');
+    document.body.classList.add('theme-light');
+  }
 }
 
 // On page load, apply theme from settings
