@@ -33,10 +33,21 @@
           <a class="nav-link" href="#/playlists" style="color:#fff;">Playlists</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" href="#/moments" style="color:#fff;">Moments</a>
+        </li>
+                <li class="nav-item">
           <a class="nav-link" href="#/stats" style="color:#fff;">Stats</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#/moments" style="color:#fff;">Moments</a>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarFeaturesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color:#fff;">
+            More
+          </a>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarFeaturesDropdown">
+            <a class="dropdown-item" href="#" onclick="window.surpriseMe && window.surpriseMe(); return false;">Surprise Me</a>
+            <a class="dropdown-item" href="#" onclick="window.cleanupThumbs && window.cleanupThumbs(); return false;">Clean Thumbnails</a>
+            <a class="dropdown-item" href="#" onclick="window.manualRescan && window.manualRescan(); return false;">Rescan Library</a>
+            <a class="dropdown-item" href="#" onclick="window.toggleTheme && window.toggleTheme(); return false;">Toggle Theme</a>
+          </div>
         </li>
       </ul>
       <form class="form-inline my-2 my-lg-0" onsubmit="event.preventDefault(); var q = this.querySelector('input').value.trim(); if(q) { location.hash = '#/search?q=' + encodeURIComponent(q); } else { alert('Please enter a search query.'); } return false;">

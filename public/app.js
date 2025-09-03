@@ -564,7 +564,7 @@ function renderLayout(content){
         class: "circle-btn",
         id: "theme-toggle-btn",
         title: "Toggle theme",
-        onclick: toggleTheme
+  onclick: window.toggleTheme
       }, h("i", { class: "fa-solid fa-circle-half-stroke", style: "font-size:16px;" }))
     ),
     content
@@ -611,7 +611,7 @@ function setTheme(theme) {
   window.currentTheme = theme;
 }
 
-async function toggleTheme() {
+window.toggleTheme = async function toggleTheme() {
   const currentTheme = document.getElementById("theme-css-link")?.href.includes("app.light.css") ? "light" : "dark";
   const newTheme = currentTheme === "dark" ? "light" : "dark";
   applyTheme(newTheme);
@@ -623,7 +623,7 @@ getThemeSetting().then(applyTheme);
 }
 
 // Add this function to trigger manual rescan
-async function manualRescan() {
+window.manualRescan = async function manualRescan() {
   try {
     const res = await fetch("/api/rescan", { method: "POST" });
     const data = await res.json();
@@ -639,7 +639,7 @@ async function manualRescan() {
   }
 }
 
-async function cleanupThumbs() {
+window.cleanupThumbs = async function cleanupThumbs() {
   try {
     const res = await fetch("/api/cleanup-thumbs", { method: "POST" });
     const data = await res.json();
@@ -657,6 +657,22 @@ async function cleanupThumbs() {
   }
 }
 
+window.surpriseMe = function surpriseMe() {
+  // True random: pick a random channel, then a random video from that channel
+  api("/api/channels?page=1&pageSize=96").then(channelsData => {
+    const channels = channelsData.data;
+    if (!channels.length) return alert("No channels found.");
+    const randChannel = channels[Math.floor(Math.random() * channels.length)];
+    const channelId = randChannel.id;
+    const channelName = randChannel.name;
+    api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=1&pageSize=96`).then(videosData => {
+      const videos = videosData.data;
+      if (!videos.length) return alert("No videos found in channel.");
+      const randVideo = videos[Math.floor(Math.random() * videos.length)];
+      location.hash = `#/watch?relPath=${encodeURIComponent(randVideo.relPath)}&channel=${encodeURIComponent(channelName)}&title=${encodeURIComponent(randVideo.name)}`;
+    }).catch(err => alert("Failed to fetch videos: " + err.message));
+  }).catch(err => alert("Failed to fetch channels: " + err.message));
+};
 function tab(label, active, onClick){
   return h("div", { class: `tab${active ? " active":""}`, onclick: onClick }, label);
 }
