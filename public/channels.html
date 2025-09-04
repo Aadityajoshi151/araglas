@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Araglas - Channels</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/app-main.css" id="theme-dark" />
+  <link rel="stylesheet" href="/app-main-light.css" id="theme-light" disabled />
+  <link rel="icon" type="image/png" href="/icons/araglas.ico" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <a class="navbar-brand" href="#/">Araglas</a>
+    <!-- ...navbar content as in index.html... -->
+  </nav>
+  <div class="container">
+    <div class="channels-page">
+      <div class="channels-header" style="display:flex;justify-content:center;align-items:center;margin-bottom:18px;">
+        <div class="searchbar" style="width:250px;position:relative;display:flex;align-items:center;">
+          <input type="text" id="channels-search" placeholder="Search channels…" class="form-control" />
+          <button type="button" id="channels-search-clear" style="position:absolute;right:6px;background:none;border:none;cursor:pointer;padding:0 8px;font-size:18px;color:var(--muted);height:100%;display:flex;align-items:center;" title="Clear search">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+      <div id="channels-grid" class="grid"></div>
+      <div id="channels-pagination" class="pagination"></div>
+    </div>
+  </div>
+  <script src="/channels.js"></script>
+</body>
+</html>
