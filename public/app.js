@@ -189,7 +189,7 @@ async function renderWatch() {
             h("div", { style: "color:var(--muted);margin-top:12px;font-size:1.1em;" },
               `Modified: ${fmtDate(video.mtime)} | Size: ${fmtSize(video.size)}`
             ),
-            h("div", { style: "display:flex;gap:12px;align-items:center;margin-top:18px;" },
+            h("div", { style: "display:flex;gap:12px;align-items-center;margin-top:18px;" },
               h("button", {
                 style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
                 onclick: async () => {
@@ -467,7 +467,8 @@ function renderLayout(content){
   app.innerHTML = "";
   const container = h("div", { class: "container" }, content);
   app.append(container);
-  ensurePlayer();
+}
+
 // --- Theme logic ---
 async function getThemeSetting() {
   try {
@@ -497,7 +498,6 @@ function applyTheme(theme) {
   link.id = "theme-css-link";
   link.href = theme === "light" ? "/app.light.css" : "/app.css";
   document.head.appendChild(link);
-}
 
 function setTheme(theme) {
   let link = document.querySelector('link[rel="stylesheet"][href^="/app"]');
@@ -1101,34 +1101,6 @@ function lazyThumbs(){
   imgs.forEach(i => io.observe(i));
 }
 
-// --- player modal ---
-function ensurePlayer(){
-  if ($(".player")) return;
-  document.body.append(
-    h("div", { class: "player", id:"player" },
-      h("div", { class:"player-inner" },
-        h("video", { id:"player-video", controls: true
-
-         }),
-        h("div", { style:"display:flex; align-items:center; justify-content:space-between; padding:10px 12px" },
-          h("div", { id:"player-title", style:"font-weight:700" }, ""),
-          h("button", { class:"icon-btn", onclick: closePlayer }, "Close")
-        )
-      )
-    ));
-}
-function openPlayer(src, title, channel){
-  const el = $("#player");
-  $("#player-video").src = src;
-  $("#player-title").textContent = (channel ? channel + " • " : "") + formatTitle(title);
-  el.classList.add("open");
-}
-function closePlayer(){
-  const v = $("#player-video");
-  v.pause();
-  v.src = "";
-  $("#player").classList.remove("open");
-}
 // --- router hook ---
 function onRoute(){
   const [base] = location.hash.split("?");
