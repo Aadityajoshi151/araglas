@@ -23,21 +23,21 @@ function renderChannelsPage() {
       return;
     }
     grid.innerHTML = data.data.map(c => `
-      <div class="channel-card-wrap">
-        <div class="channel-card">
-          <img class="channel-thumb" src="/api/thumb?relPath=${encodeURIComponent(c.coverRelPath)}" alt="${c.name}" />
+      <div class="channel-card-wrap" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div class="channel-card" style="width:100%;max-width:180px;min-width:120px;">
+          <img class="channel-thumb" src="/api/thumb?relPath=${encodeURIComponent(c.coverRelPath)}" alt="${c.name}" style="width:100%;height:auto;border-radius:10px;object-fit:cover;" />
         </div>
-        <div class="channel-title">${c.name}</div>
-        <div class="channel-sub">${c.count} video${c.count !== 1 ? "s" : ""}</div>
+        <div class="channel-title" style="margin-top:8px;font-weight:600;text-align:center;word-break:break-word;">${c.name}</div>
+        <div class="channel-sub" style="font-size:0.98em;color:var(--muted);text-align:center;">${c.count} video${c.count !== 1 ? "s" : ""}</div>
       </div>
     `).join("");
     // Pagination
     pagination.innerHTML = `
-      <button ${data.page === 1 ? "disabled" : ""} onclick="window.goToPage(1)">« First</button>
-      <button ${data.page === 1 ? "disabled" : ""} onclick="window.goToPage(${Math.max(1, data.page-1)})">‹ Prev</button>
+      <button class="pagination-btn" ${data.page === 1 ? "disabled" : ""} onclick="window.goToPage(1)">« First</button>
+      <button class="pagination-btn" ${data.page === 1 ? "disabled" : ""} onclick="window.goToPage(${Math.max(1, data.page-1)})">‹ Prev</button>
       <span class="cur">Page ${data.page} / ${data.totalPages}</span>
-      <button ${data.page === data.totalPages ? "disabled" : ""} onclick="window.goToPage(${Math.min(data.totalPages, data.page+1)})">Next ›</button>
-      <button ${data.page === data.totalPages ? "disabled" : ""} onclick="window.goToPage(${data.totalPages})">Last »</button>
+      <button class="pagination-btn" ${data.page === data.totalPages ? "disabled" : ""} onclick="window.goToPage(${Math.min(data.totalPages, data.page+1)})">Next ›</button>
+      <button class="pagination-btn" ${data.page === data.totalPages ? "disabled" : ""} onclick="window.goToPage(${data.totalPages})">Last »</button>
     `;
   }
 

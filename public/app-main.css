@@ -220,3 +220,67 @@ body{
   text-align: center;
   margin-bottom: 8px;
 }
+/* Pagination styles for channels page */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 24px 0 0 0;
+  flex-wrap: wrap;
+}
+.pagination-btn {
+  background: #232323;
+  color: var(--text);
+  border: none;
+  border-radius: 7px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  outline: none;
+  display: inline-block;
+  position: relative;
+}
+.pagination-btn:hover:not(:disabled),
+.pagination-btn:focus:not(:disabled) {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255,0,0,0.10);
+}
+.pagination-btn.active {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255,0,0,0.18);
+}
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #232323;
+  color: #888;
+  box-shadow: none;
+}
+/* Responsive grid/cards for mobile */
+@media (max-width: 600px) {
+  .container {
+    padding: 8px;
+  }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .card {
+    border-radius: 8px;
+    font-size: 0.98rem;
+  }
+  .channels-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .searchbar {
+    width: 100%;
+    min-width: 0;
+  }
+}

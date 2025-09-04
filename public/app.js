@@ -1071,7 +1071,7 @@ function rowVideo(channelName, v) {
 
 function pagination(meta, onPage){
   const btn = (label, p, disabled=false) =>
-    h("button", { disabled, onclick: ()=> onPage(p) }, label);
+    h("button", { class: "pagination-btn", disabled, onclick: ()=> onPage(p) }, label);
 
   return h("div", { class: "pagination" },
     btn("« First", 1, meta.page === 1),
