@@ -1,3 +1,17 @@
+// Cleanup all .orig.* files in thumbs directory
+export async function cleanupOrigThumbs(thumbsDir) {
+  const files = await fs.readdir(thumbsDir);
+  for (const file of files) {
+    if (file.includes('.orig.')) {
+      try {
+        await fs.unlink(path.join(thumbsDir, file));
+        console.log(`[thumbs] Deleted duplicate: ${file}`);
+      } catch (err) {
+        console.log(`[thumbs] Failed to delete: ${file}`, err);
+      }
+    }
+  }
+}
 import fs from "fs-extra";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -32,11 +46,9 @@ export async function makeThumb(ffmpegPath, videoAbs, outAbsBase) {
     let out = '';
     ffprobe.stdout.on('data', d => { out += d.toString(); ffprobeRaw += d.toString(); });
     await new Promise(resolve => ffprobe.on('close', resolve));
-  // ...existing code...
     const info = JSON.parse(out);
     if (info.streams) {
       for (const s of info.streams) {
-  // ...existing code...
         // Prefer disposition.attached_pic, but fallback to codec_name 'png' for non-audio streams
         if ((s.disposition && s.disposition.attached_pic === 1) ||
             (!s.disposition && s.codec_name === 'png' && s.index !== 0)) {
@@ -84,13 +96,14 @@ export async function makeThumb(ffmpegPath, videoAbs, outAbsBase) {
     });
     // Step 2: If extracted, re-encode and resize to match generated thumbnail quality
     if (extracted) {
-      // Always output as jpg for consistency
+      // Always output as webp for consistency
+      const finalThumb = outAbsBase + ".webp";
       const resizeArgs = [
         "-y",
         "-i", tempThumb,
         "-vf", "scale=480:-1",
-        "-q:v", "4",
-        outAbsBase + ".jpg"
+        "-compression_level", "6",
+        finalThumb
       ];
       await new Promise((resolve) => {
         const p = spawn(ffmpegPath, resizeArgs);
@@ -99,29 +112,45 @@ export async function makeThumb(ffmpegPath, videoAbs, outAbsBase) {
         p.on("close", code => {
           if (code === 0) {
             console.log(`[thumbs] Embedded thumbnail resized and re-encoded for: ${videoAbs}`);
+            // Remove temp file after successful resize
+            try { require('fs').unlinkSync(tempThumb); } catch {}
           } else {
             console.log(`[thumbs] Failed to resize/re-encode embedded thumbnail for: ${videoAbs}`);
             if (err) console.log(`[thumbs] ffmpeg error: ${err}`);
+            // Remove temp file even if resize fails
+            try { require('fs').unlinkSync(tempThumb); } catch {}
           }
           resolve();
         });
       });
-      // Remove temp file
-      try { require('fs').unlinkSync(tempThumb); } catch {}
-      return outAbsBase + ".jpg";
+      // Clean up any leftover .orig.* files after thumbnail creation
+      const thumbsDir = path.dirname(finalThumb);
+      if (typeof cleanupOrigThumbs === 'function') {
+        await cleanupOrigThumbs(thumbsDir);
+      }
+      return finalThumb;
     } else {
+      // Remove temp file if extraction failed
+      try { require('fs').unlinkSync(tempThumb); } catch {}
       console.log(`[thumbs] Extraction failed for attached_pic stream, not falling back to frame extraction.`);
-      return outAbs;
+      // Clean up any leftover .orig.* files after thumbnail creation
+      const thumbsDir = path.dirname(outAbsBase + ".webp");
+      if (typeof cleanupOrigThumbs === 'function') {
+        await cleanupOrigThumbs(thumbsDir);
+      }
+      return outAbsBase + ".webp";
     }
   } else {
     // Only fallback if no attached_pic stream detected
     await new Promise((resolve, reject) => {
+      const outAbs = outAbsBase + ".webp";
       const args = [
         "-y",
         "-ss", "00:00:10",
         "-i", videoAbs,
         "-frames:v", "1",
         "-vf", "scale=480:-1",
+        "-compression_level", "6",
         "-nostats",
         "-loglevel", "error",
         outAbs
@@ -140,10 +169,10 @@ export async function makeThumb(ffmpegPath, videoAbs, outAbsBase) {
         }
       });
     });
+    return outAbsBase + ".webp";
   }
-  return outAbs;
 }
 
 export function thumbPathFor(thumbsDir, relPath) {
-  return path.join(thumbsDir, `${hashPath(relPath)}.jpg`);
+  return path.join(thumbsDir, `${hashPath(relPath)}.webp`);
 }

@@ -448,9 +448,12 @@ async function api(url){
 }
 
 function channelCover(relPath){
+  if (!relPath) return '/icons/araglas.png';
+  // Always expect .webp for thumbnails
   return `/api/thumb?relPath=${encodeURIComponent(relPath)}`;
 }
 function videoThumb(relPath){
+  // Always expect .webp for thumbnails
   return `/api/thumb?relPath=${encodeURIComponent(relPath)}`;
 }
 function videoUrl(relPath){
