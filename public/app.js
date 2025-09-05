@@ -896,26 +896,47 @@ function cardChannel(c, onClick) {
 
 function cardVideo(v, onPlay) {
   const isFav = state.favorites.some(f => f.relPath === v.relPath);
-
-  // Truncate title if longer than 40 chars
   const formatted = formatTitle(v.name);
   const showTitle = formatted.length > 40 ? formatted.slice(0, 37) + "..." : formatted;
-
-  // Info line: channel | date
   const infoLine = [
     v.channel || "",
     v.mtime ? fmtDate(v.mtime) : ""
   ].filter(Boolean).join(" | ");
 
-  // Add to Playlist button handler
-  function openPlaylistModal(e) {
-    e.preventDefault(); e.stopPropagation();
-    showPlaylistModal(v);
-  }
-
   // Link to /watch page
   function goToWatch() {
     location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(formatTitle(v.name))}`;
+  }
+
+  // Dropdown menu logic
+  function showDropdown(e) {
+    e.stopPropagation();
+    // Remove any existing dropdown
+    const old = document.getElementById("video-dropdown");
+    if (old) old.remove();
+    // Create dropdown
+    const rect = e.currentTarget.getBoundingClientRect();
+    const menu = h("div", {
+      id: "video-dropdown",
+      style: `position:fixed;z-index:1000;top:${rect.bottom+6}px;left:${rect.left}px;background:var(--card);color:var(--text);border-radius:10px;box-shadow:0 2px 16px rgba(0,0,0,0.18);padding:8px 0;min-width:200px;`
+    },
+      h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;", onclick: (ev)=>{ ev.stopPropagation(); toggleFav(ev, v); menu.remove(); } },
+        h("i", { class: "fa-regular fa-heart", style: `color:var(--muted);font-size:18px;` }),
+        "Add to Favorites"
+      ),
+      h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;", onclick: (ev)=>{ ev.stopPropagation(); showPlaylistModal(v); menu.remove(); } },
+        h("i", { class: "fa-solid fa-list", style: "color:var(--muted);font-size:18px;" }),
+        "Add to Playlist"
+      )
+    );
+    document.body.appendChild(menu);
+    // Remove dropdown on click outside
+    setTimeout(()=>{
+      document.addEventListener("click", function handler() {
+        menu.remove();
+        document.removeEventListener("click", handler);
+      });
+    }, 10);
   }
 
   return h("div", { class: "card", onclick: goToWatch },
@@ -933,25 +954,14 @@ function cardVideo(v, onPlay) {
     ),
     h("div", { class: "card-body" },
       h("div", { class: "card-title", title: formatted }, showTitle),
-      h("div", { class: "card-sub" }, infoLine),
-      h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
-      h("div", { style: "display:flex;gap:8px;align-items:center;" },
+      h("div", { style: "display:flex;align-items:center;gap:8px;justify-content:space-between;" },
+        h("div", { class: "card-sub" }, infoLine),
         h("button", {
-          class: `icon-btn fav-btn`,
-          onclick: (e) => { e.stopPropagation(); toggleFav(e, v); },
-          title: isFav ? "Unfavorite" : "Favorite"
-        },
-          h("i", {
-            class: isFav ? "fa-solid fa-heart" : "fa-regular fa-heart",
-            style: `color:${isFav ? "red" : "var(--muted)"};font-size:18px;vertical-align:-2px;`
-          })
-        ),
-        h("button", {
-          class: "icon-btn",
-          title: "Add to Playlist",
-          onclick: (e) => { e.stopPropagation(); openPlaylistModal(e); },
-          style: "margin-left:4px;"
-        }, h("i", { class: "fa-solid fa-list", style: "font-size:18px;vertical-align:-2px;" }))
+          class: "icon-btn video-menu-btn",
+          title: "More options",
+          style: "background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:0 4px;margin-left:auto;",
+          onclick: function(ev) { ev.stopPropagation(); showDropdown(ev); }
+        }, h("i", { class: "fa-solid fa-ellipsis-vertical" }))
       )
     )
   );
