@@ -897,9 +897,9 @@ function cardChannel(c, onClick) {
 function cardVideo(v, onPlay) {
   const isFav = state.favorites.some(f => f.relPath === v.relPath);
 
-  // Truncate title if longer than 25 chars
+  // Truncate title if longer than 40 chars
   const formatted = formatTitle(v.name);
-  const showTitle = formatted.length > 25 ? formatted.slice(0, 22) + "..." : formatted;
+  const showTitle = formatted.length > 40 ? formatted.slice(0, 37) + "..." : formatted;
 
   // Info line: channel | date
   const infoLine = [
