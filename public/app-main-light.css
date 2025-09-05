@@ -73,18 +73,20 @@ body{
 }
 
 .card {
-  background: var(--card);
-  border-radius: 12px;
-  /* box-shadow removed */
+  background: var(--bg);
+  border-radius: 18px;
+  box-shadow: none;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: background 0.2s;
+  transition: none;
   cursor: pointer;
+  min-width: 0;
 }
 
 .card:hover {
-  background: rgba(255,0,0,0.04);
+  background: var(--bg);
+  box-shadow: none;
 }
 
 .thumb {
@@ -94,18 +96,19 @@ body{
   background: #222;
   display: block;
   cursor: pointer;
+  border-radius: 18px;
 }
 
 .card-body {
-  padding: 12px 12px 12px 12px;
+  padding: 16px 18px 14px 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .card-title {
   font-weight: 700;
-  font-size: 0.95rem; /* slightly smaller */
+  font-size: 1.08rem;
   margin-bottom: 2px;
   color: var(--text);
   overflow: hidden;
@@ -115,11 +118,15 @@ body{
 }
 
 .card-sub {
-  font-size: 12px;
+  font-size: 0.98rem;
   color: var(--muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.card-size {
+  display: none;
 }
 
 body {
@@ -288,5 +295,15 @@ body {
   .searchbar {
     width: 100%;
     min-width: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .card-body {
+    padding: 12px 10px 10px 10px;
   }
 }

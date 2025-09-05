@@ -597,7 +597,6 @@ async function renderHome() {
   );
   renderLayout(
     h("div", {},
-      h("div", { class: "notice" }, "Latest Videos"),
       videos.length ? grid : h("div", { class: "notice" }, "No videos found."),
       pagination(data, (p)=>{ location.hash = `#/?page=${p}&pageSize=${pageSize}`; })
     )

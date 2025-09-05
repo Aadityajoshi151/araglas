@@ -71,20 +71,20 @@ body{
 }
 
 .card {
-  background: var(--card);
+  background: var(--bg);
   border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  box-shadow: none;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: background 0.2s, box-shadow 0.2s;
+  transition: none;
   cursor: pointer;
   min-width: 0;
 }
 
 .card:hover {
-  background: rgba(255,0,0,0.04);
-  box-shadow: 0 8px 32px rgba(255,0,0,0.10);
+  background: var(--bg);
+  box-shadow: none;
 }
 
 .thumb {
@@ -94,7 +94,7 @@ body{
   background: #222;
   display: block;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: 18px;
 }
 
 .card-body {
@@ -124,8 +124,7 @@ body{
 }
 
 .card-size {
-  font-size: 0.95rem;
-  color: var(--muted);
+  display: none;
 }
 
 .navbar {
@@ -290,6 +289,9 @@ body{
     gap: 10px;
   }
   .card {
+    border-radius: 12px;
+  }
+  .thumb {
     border-radius: 12px;
   }
   .card-body {
