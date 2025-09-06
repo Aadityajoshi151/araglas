@@ -179,7 +179,14 @@ body{
   /* Prevent navbar dropdown items from changing color on hover */
   .navbar .dropdown-item:hover, .navbar .dropdown-item:focus, .navbar .dropdown-item:active {
     background: none !important;
-    color: inherit !important;
+    color: var(--text) !important;
+    outline: none !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+    filter: none !important;
+    -webkit-text-fill-color: var(--text) !important;
+    -webkit-box-shadow: none !important;
+    -webkit-filter: none !important;
   }
 /* Search bar styles */
 #navbar-search {
