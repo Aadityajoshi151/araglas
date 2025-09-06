@@ -911,10 +911,13 @@ function cardVideo(v, onPlay) {
   // Dropdown menu logic
   function showDropdown(e) {
     e.stopPropagation();
-    // Remove any existing dropdown
     const old = document.getElementById("video-dropdown");
-    if (old) old.remove();
-    // Create dropdown
+    // If dropdown is already open and the button is clicked again, close it and return
+    if (old) {
+      old.remove();
+      return;
+    }
+    // Otherwise, open the dropdown
     const rect = e.currentTarget.getBoundingClientRect();
     const isFav = state.favorites.some(f => f.relPath === v.relPath);
     const menu = h("div", {
