@@ -919,10 +919,18 @@ function cardVideo(v, onPlay) {
     }
     // Otherwise, open the dropdown
     const rect = e.currentTarget.getBoundingClientRect();
+    const menuWidth = 220; // px, slightly wider for touch
+    let left = rect.left;
+    // If menu would overflow right edge, shift it left
+    if (left + menuWidth > window.innerWidth - 8) {
+      left = window.innerWidth - menuWidth - 8;
+    }
+    // Clamp to min 8px from left edge
+    if (left < 8) left = 8;
     const isFav = state.favorites.some(f => f.relPath === v.relPath);
     const menu = h("div", {
       id: "video-dropdown",
-      style: `position:fixed;z-index:1000;top:${rect.bottom+6}px;left:${rect.left}px;background:var(--card);color:var(--text);border-radius:10px;box-shadow:0 2px 16px rgba(0,0,0,0.18);padding:8px 0;min-width:200px;`
+      style: `position:fixed;z-index:1000;top:${rect.bottom+6}px;left:${left}px;background:var(--card);color:var(--text);border-radius:10px;box-shadow:0 2px 16px rgba(0,0,0,0.18);padding:8px 0;min-width:${menuWidth}px;max-width:calc(100vw - 16px);`
     },
       h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;", onclick: (ev)=>{ ev.stopPropagation(); toggleFav(ev, v); menu.remove(); } },
         isFav
