@@ -922,7 +922,7 @@ function cardVideo(v, onPlay) {
     },
       h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;", onclick: (ev)=>{ ev.stopPropagation(); toggleFav(ev, v); menu.remove(); } },
         h("i", { class: "fa-regular fa-heart", style: `color:var(--muted);font-size:18px;` }),
-        "Add to Favorites"
+        "Add/Remove From Favorites"
       ),
       h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;", onclick: (ev)=>{ ev.stopPropagation(); showPlaylistModal(v); menu.remove(); } },
         h("i", { class: "fa-solid fa-list", style: "color:var(--muted);font-size:18px;" }),
@@ -959,9 +959,9 @@ function cardVideo(v, onPlay) {
         h("button", {
           class: "icon-btn video-menu-btn",
           title: "More options",
-          style: "background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:0 4px;margin-left:auto;",
+          style: "background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:8px 12px;margin-left:auto;min-width:40px;min-height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background 0.15s;",
           onclick: function(ev) { ev.stopPropagation(); showDropdown(ev); }
-        }, h("i", { class: "fa-solid fa-ellipsis-vertical" }))
+        }, h("i", { class: "fa-solid fa-ellipsis-vertical", style: "font-size:22px;margin:0;pointer-events:none;" }))
       )
     )
   );
