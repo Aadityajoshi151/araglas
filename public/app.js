@@ -283,7 +283,7 @@ async function renderMoments() {
                   const title = formatTitle(relPath.split("/").pop());
                   location.hash = `#/watch?relPath=${encodeURIComponent(relPath)}&channel=${encodeURIComponent(channel)}&title=${encodeURIComponent(title)}&timestamp=${m.timestamp}`;
                 }
-              }, h("i", { class: "fa-solid fa-play", style: "margin-right:6px;" }),
+              },
                 `Play @ ${formatTimestamp(m.timestamp)}`),
               h("div", { style: "font-weight:600;" }, m.title),
               h("button", {
