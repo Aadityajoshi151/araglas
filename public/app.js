@@ -916,18 +916,33 @@ function cardVideo(v, onPlay) {
     if (old) old.remove();
     // Create dropdown
     const rect = e.currentTarget.getBoundingClientRect();
+    const isFav = state.favorites.some(f => f.relPath === v.relPath);
     const menu = h("div", {
       id: "video-dropdown",
       style: `position:fixed;z-index:1000;top:${rect.bottom+6}px;left:${rect.left}px;background:var(--card);color:var(--text);border-radius:10px;box-shadow:0 2px 16px rgba(0,0,0,0.18);padding:8px 0;min-width:200px;`
     },
       h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;", onclick: (ev)=>{ ev.stopPropagation(); toggleFav(ev, v); menu.remove(); } },
-        h("i", { class: "fa-regular fa-heart", style: `color:var(--muted);font-size:18px;` }),
-        "Add/Remove From Favorites"
+        isFav
+          ? h("i", { class: "fa-solid fa-heart", style: `color:#e53935;font-size:18px;` })
+          : h("i", { class: "fa-regular fa-heart", style: `color:var(--muted);font-size:18px;` }),
+        isFav ? "Remove from Favorites" : "Add to Favorites"
       ),
       h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;", onclick: (ev)=>{ ev.stopPropagation(); showPlaylistModal(v); menu.remove(); } },
         h("i", { class: "fa-solid fa-list", style: "color:var(--muted);font-size:18px;" }),
         "Add to Playlist"
-      )
+      ),
+      (state.currentPlaylistId ?
+        h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;color:#d32f2f;", onclick: async (ev)=>{
+          ev.stopPropagation();
+          if (confirm("Remove this video from playlist?")) {
+            await removeVideoFromPlaylist(state.currentPlaylistId, v.relPath);
+            menu.remove();
+            onRoute();
+          }
+        }},
+          h("i", { class: "fa-solid fa-xmark", style: "color:#d32f2f;font-size:18px;" }),
+          "Remove from Playlist"
+        ) : null)
     );
     document.body.appendChild(menu);
     // Remove dropdown on click outside
@@ -1120,4 +1135,7 @@ function onRoute(){
   });
 }
 window.addEventListener("hashchange", onRoute);
-onRoute();
+(async () => {
+  await loadFavs();
+  onRoute();
+})();
