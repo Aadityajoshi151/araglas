@@ -996,16 +996,30 @@ function cardVideo(v, onPlay) {
 // --- Playlist Modal ---
 function showPlaylistModal(video) {
   // Remove any existing modal
-  const old = $("#playlist-modal");
+  const old = document.getElementById("playlist-modal");
   if (old) old.remove();
 
-  // Load playlists
-  loadPlaylists().then(() => {
-    const playlists = state.playlists;
-    // Track selected playlists
-    let selected = new Set();
+  // Infinite scroll state for modal only
+  let playlistPage = 1;
+  let loading = false;
+  let allLoaded = false;
+  let playlists = [];
+  let selected = new Set();
 
-    // Modal content
+  async function loadMorePlaylists() {
+    if (loading || allLoaded) return;
+    loading = true;
+    const resp = await api(`/api/playlists?page=${playlistPage}&pageSize=10`);
+    if (Array.isArray(resp.data)) {
+      playlists = playlists.concat(resp.data);
+      if (playlists.length >= (resp.total || 0)) allLoaded = true;
+    }
+    playlistPage++;
+    loading = false;
+    renderModal();
+  }
+
+  function renderModal() {
     const modal = h("div", {
       id: "playlist-modal",
       style: `position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center;`
@@ -1014,13 +1028,21 @@ function showPlaylistModal(video) {
         style: `background:var(--card);padding:28px 24px;border-radius:14px;min-width:320px;max-width:90vw;box-shadow:0 2px 24px rgba(0,0,0,0.18);position:relative;`
       },
         h("div", { style: "font-weight:700;font-size:1.1em;margin-bottom:12px;" }, "Add to Playlists"),
-        h("div", { style: "margin-bottom:14px;" },
+        h("div", {
+          style: "margin-bottom:14px;max-height:260px;overflow-y:auto;",
+          onscroll: function(e) {
+            const el = e.target;
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 24) {
+              loadMorePlaylists();
+            }
+          }
+        },
           playlists.length ?
             playlists.map(pl =>
               h("label", { style: "display:flex;align-items:center;gap:8px;margin-bottom:6px;" },
                 h("input", {
                   type: "checkbox",
-                  checked: false,
+                  checked: selected.has(pl.id),
                   onchange: (e) => {
                     if (e.target.checked) selected.add(pl.id);
                     else selected.delete(pl.id);
@@ -1028,7 +1050,7 @@ function showPlaylistModal(video) {
                 }),
                 h("span", {}, pl.name)
               )
-            ) : h("div", { style: "color:var(--muted);margin-bottom:8px;" }, "No playlists yet.")
+            ) : h("div", { style: "color:var(--muted);margin-bottom:8px;" }, loading ? "Loading..." : "No playlists yet.")
         ),
         h("form", {
           onsubmit: async (e) => {
@@ -1037,9 +1059,11 @@ function showPlaylistModal(video) {
             if (!name) return;
             await createPlaylist(name);
             e.target.reset();
-            await loadPlaylists();
-            // Re-render modal with new playlist
-            showPlaylistModal(video);
+            // Reset and reload playlists
+            playlistPage = 1;
+            playlists = [];
+            allLoaded = false;
+            await loadMorePlaylists();
           },
           style: "display:flex;gap:8px;margin-bottom:14px;"
         },
@@ -1070,8 +1094,14 @@ function showPlaylistModal(video) {
         }, "×")
       )
     );
+    // Remove any existing modal and add new
+    const old = document.getElementById("playlist-modal");
+    if (old) old.remove();
     document.body.append(modal);
-  });
+  }
+
+  // Initial load
+  loadMorePlaylists();
 }
 
 function rowVideo(channelName, v) {
