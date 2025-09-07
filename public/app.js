@@ -613,7 +613,6 @@ async function renderPlaylists() {
   const page = state.playlistsPage;
   const totalPages = state.playlistsTotalPages;
   const list = h("div", { style: "max-width:500px;margin:0 auto;" },
-    h("div", { class: "notice" }, "Your Playlists"),
     h("div", {},
       h("form", {
         onsubmit: async (e) => {
@@ -734,7 +733,7 @@ async function renderPlaylistDetail() {
   );
   renderLayout(
     h("div", {},
-      h("div", { class: "notice" }, `Playlist: ${playlist.name}`),
+  h("div", { class: "notice", style: "text-align:center;font-size:1.2em;font-weight:700;margin:18px 0;" }, `Playlist: ${playlist.name}`),
       videos.length ? grid : h("div", { class: "notice" }, "No videos in this playlist."),
       pagination({ page, totalPages }, (p) => { location.hash = `#/playlist?id=${encodeURIComponent(id)}&page=${p}&pageSize=${pageSize}`; })
     )
@@ -764,7 +763,7 @@ async function renderChannel() {
   );
   renderLayout(
     h("div", {},
-      h("div", { class: "notice" }, `Channel: ${name}`),
+  h("div", { class: "notice", style: "text-align:center;font-size:1.2em;font-weight:700;margin:18px 0;" }, `Channel: ${name}`),
       //searchInline(q, (val) => location.hash = `#/channel?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&q=${encodeURIComponent(val)}&page=1`),
       data.data.length ? grid : h("div", { class: "notice" }, "No videos here."),
       pagination(data, (p) => { location.hash = `#/channel?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&q=${encodeURIComponent(q)}&page=${p}&pageSize=${pageSize}`; })
