@@ -161,78 +161,74 @@ async function renderWatch() {
   }
 
   renderLayout(
-    h("div", { style: "display:flex;justify-content:center;align-items:center;min-height:70vh;" },
-      h("div", { style: "width:100%;max-width:1100px;margin:0 auto;" },
-        h("div", { style: "background:var(--card);border-radius:18px;box-shadow:none;padding:40px 48px 40px 48px;margin-bottom:32px;" },
-          h("video", {
-            id: "main-video-player",
-            src: videoUrl(video.relPath),
-            controls: true,
-            autoplay: true,
-            style: "width:100%;max-height:80vh;border-radius:14px;background:black;"
+    h("div", {
+      style: "width:100%;max-width:1280px;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;"
+    },
+      h("video", {
+        id: "main-video-player",
+        src: videoUrl(video.relPath),
+        controls: true,
+        autoplay: true,
+        style: "width:100%;max-height:70vh;background:black;border-radius:0;"
+      }),
+      h("div", { style: "margin-top:18px;padding:0 8px;width:100%;" },
+        h("div", {
+          style: "font-size:1.6em;font-weight:700;margin-bottom:8px;word-break:break-word;overflow-wrap:break-word;white-space:pre-line;max-width:100%;text-align:left;"
+        }, formatTitle(video.name)),
+        h("div", { style: "display:flex;align-items:center;gap:12px;margin-bottom:6px;" },
+          h("img", {
+            src: channelCover(channelCoverPath || video.relPath.split("/")[0]),
+            style: "width:36px;height:36px;border-radius:50%;object-fit:cover;background:#222;",
+            onerror: function() { this.src = '/icons/araglas.png'; }
           }),
-          h("div", { style: "margin-top:32px;" },
-            h("div", {
-              style: "font-size:2em;font-weight:700;margin-bottom:18px;word-break:break-word;overflow-wrap:break-word;white-space:pre-line;max-width:100%;"
-            }, formatTitle(video.name)),
-            h("div", { style: "display:flex;align-items:center;gap:16px;" },
-              h("img", {
-                src: channelCover(channelCoverPath || video.relPath.split("/")[0]),
-                style: "width:40px;height:40px;border-radius:50%;object-fit:cover;background:#222;",
-                onerror: function() { this.src = '/icons/araglas.png'; }
-              }),
-              h("a", {
-                href: `#/channel?id=${encodeURIComponent(channelId)}&name=${encodeURIComponent(channel)}`,
-                style: "color:var(--brand);font-weight:700;text-decoration:none;font-size:1.2em;"
-              }, channel)
-            ),
-            h("div", { style: "color:var(--muted);margin-top:12px;font-size:1.1em;" },
-              `Modified: ${fmtDate(video.mtime)} | Size: ${fmtSize(video.size)}`
-            ),
-            h("div", { style: "display:flex;gap:12px;align-items-center;margin-top:18px;" },
-              h("button", {
-                style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
-                onclick: async () => {
-                  const player = document.getElementById("main-video-player");
-                  if (!player) return;
-                  const ts = Math.floor(player.currentTime);
-                  const title = prompt("Moment at "+ts+"s title:");
-                  if (!title) return;
-                  await fetch("/api/moments", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ relPath: video.relPath, timestamp: ts, title })
-                  });
-                  alert("Moment saved!");
-                }
-              }, h("i", { class: "fa-solid fa-hand-point-up", style: "margin-right:8px;" }), "Add Moment"),
-              h("button", {
-                style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
-                onclick: (e) => {
-                  e.preventDefault();
-                  showPlaylistModal(video);
-                }
-              }, h("i", { class: "fa-solid fa-list", style: "margin-right:8px;" }), "Add to Playlist")
-              ,
-              h("button", {
-                style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
-                onclick: async (e) => {
-                  e.preventDefault();
-                  await addFav({
-                    relPath: video.relPath,
-                    name: video.name,
-                    channel: video.channel,
-                    channelId: channelId,
-                    mtime: video.mtime,
-                    size: video.size
-                  });
-                  alert("Added to Favorites!");
-                }
-              }, h("i", { class: "fa-solid fa-heart", style: "margin-right:8px;" }), "Add to Favorites")
-            ),
-            infoSection
-          )
-        )
+          h("a", {
+            href: `#/channel?id=${encodeURIComponent(channelId)}&name=${encodeURIComponent(channel)}`,
+            style: "color:var(--brand);font-weight:700;text-decoration:none;font-size:1.08em;"
+          }, channel),
+          h("span", { style: "margin-left:8px;color:var(--muted);font-size:1em;" }, `|  ${fmtDate(video.mtime)}`)
+        ),
+        h("div", { style: "color:var(--muted);font-size:1em;margin-bottom:8px;" }, `Size: ${fmtSize(video.size)}`),
+        h("div", { style: "display:flex;gap:14px;align-items:center;margin:18px 0 10px 0;flex-wrap:wrap;" },
+          h("button", {
+            style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;",
+            onclick: async () => {
+              const player = document.getElementById("main-video-player");
+              if (!player) return;
+              const ts = Math.floor(player.currentTime);
+              const title = prompt("Moment at "+ts+"s title:");
+              if (!title) return;
+              await fetch("/api/moments", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ relPath: video.relPath, timestamp: ts, title })
+              });
+              alert("Moment saved!");
+            }
+          }, h("i", { class: "fa-solid fa-hand-point-up", style: "margin-right:8px;" }), "Add Moment"),
+          h("button", {
+            style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;",
+            onclick: (e) => {
+              e.preventDefault();
+              showPlaylistModal(video);
+            }
+          }, h("i", { class: "fa-solid fa-list", style: "margin-right:8px;" }), "Add to Playlist"),
+          h("button", {
+            style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;",
+            onclick: async (e) => {
+              e.preventDefault();
+              await addFav({
+                relPath: video.relPath,
+                name: video.name,
+                channel: video.channel,
+                channelId: channelId,
+                mtime: video.mtime,
+                size: video.size
+              });
+              alert("Added to Favorites!");
+            }
+          }, h("i", { class: "fa-solid fa-heart", style: "margin-right:8px;" }), "Add to Favorites")
+        ),
+        infoSection
       )
     )
   );
