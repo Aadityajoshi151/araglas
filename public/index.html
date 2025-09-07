@@ -44,18 +44,21 @@
             More
           </a>
           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarFeaturesDropdown">
-            <a class="dropdown-item" href="#" onclick="window.surpriseMe && window.surpriseMe(); return false;">Surprise Me</a>
             <a class="dropdown-item" href="#" onclick="window.cleanupThumbs && window.cleanupThumbs(); return false;">Clean Thumbnails</a>
             <a class="dropdown-item" href="#" onclick="window.manualRescan && window.manualRescan(); return false;">Rescan Library</a>
-            <a class="dropdown-item" href="#" onclick="window.toggleTheme && window.toggleTheme(); return false;">Toggle Theme</a>
           </div>
         </li>
       </ul>
       <form class="form-inline my-2 my-lg-0" onsubmit="event.preventDefault(); var q = this.querySelector('input').value.trim(); if(q) { location.hash = '#/search?q=' + encodeURIComponent(q); } else { alert('Please enter a search query.'); } return false;">
-  <div class="navbar-search-wrap">
-          <input id="navbar-search" class="form-control mr-sm-2" type="search" placeholder="Search videos..." aria-label="Search videos...">
-          </button>
-        </div>
+  <div class="navbar-search-wrap" style="display:flex;align-items:center;gap:10px;">
+    <input id="navbar-search" class="form-control mr-sm-2" type="search" placeholder="Search videos..." aria-label="Search videos...">
+  </div>
+  <button type="button" class="btn btn-outline-danger my-2 my-sm-0" style="font-size:1.2em;display:inline-flex;align-items:center;justify-content:center;margin-left:10px;" title="Surprise Me" onclick="window.surpriseMe && window.surpriseMe();">
+    <i class="fa-solid fa-face-surprise"></i>
+  </button>
+  <button type="button" class="btn btn-outline-danger my-2 my-sm-0" style="font-size:1.2em;display:inline-flex;align-items:center;justify-content:center;margin-left:8px;" title="Toggle Theme" onclick="window.toggleTheme && window.toggleTheme();">
+    <i class="fa-solid fa-circle-half-stroke"></i>
+  </button>
       </form>
     </div>
   </nav>
