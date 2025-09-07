@@ -708,14 +708,14 @@ async function renderPlaylistDetail() {
         }
       }),
       h("div", { class: "card-body" },
-        h("div", { class: "card-title", title: v.name }, v.name.length > 25 ? v.name.slice(0, 22) + "..." : v.name),
+        h("div", { class: "card-title", title: v.name }, formatTitle(v.name).length > 25 ? formatTitle(v.name).slice(0, 22) + "..." : formatTitle(v.name)),
         h("div", { class: "card-sub" }, [v.channel || "", v.mtime ? fmtDate(v.mtime) : ""].filter(Boolean).join(" | ")),
         h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
         h("div", { style: "display:flex;gap:8px;align-items:center;" },
-          h("button", {
-            class: "icon-btn",
+          h("span", {
+            class: "remove-link",
             title: "Remove from Playlist",
-            style: "color:var(--muted);font-size:18px;vertical-align:-2px;",
+            style: "color:var(--danger);font-size:0.98em;cursor:pointer;text-decoration:underline;",
             onclick: async (e) => {
               e.preventDefault(); e.stopPropagation();
               if (confirm("Remove this video from playlist?")) {
@@ -724,7 +724,7 @@ async function renderPlaylistDetail() {
                 onRoute();
               }
             }
-          }, h("i", { class: "fa-solid fa-xmark" }))
+          }, "Remove from Playlist")
         )
       )
     );
