@@ -161,78 +161,74 @@ async function renderWatch() {
   }
 
   renderLayout(
-    h("div", { style: "display:flex;justify-content:center;align-items:center;min-height:70vh;" },
-      h("div", { style: "width:100%;max-width:1100px;margin:0 auto;" },
-        h("div", { style: "background:var(--card);border-radius:18px;box-shadow:none;padding:40px 48px 40px 48px;margin-bottom:32px;" },
-          h("video", {
-            id: "main-video-player",
-            src: videoUrl(video.relPath),
-            controls: true,
-            autoplay: true,
-            style: "width:100%;max-height:80vh;border-radius:14px;background:black;"
+    h("div", {
+      style: "width:100%;max-width:1280px;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;"
+    },
+      h("video", {
+        id: "main-video-player",
+        src: videoUrl(video.relPath),
+        controls: true,
+        autoplay: true,
+        style: "width:100%;max-height:70vh;background:black;border-radius:0;"
+      }),
+      h("div", { style: "margin-top:18px;padding:0 8px;width:100%;" },
+        h("div", {
+          style: "font-size:1.6em;font-weight:700;margin-bottom:8px;word-break:break-word;overflow-wrap:break-word;white-space:pre-line;max-width:100%;text-align:left;"
+        }, formatTitle(video.name)),
+        h("div", { style: "display:flex;align-items:center;gap:12px;margin-bottom:6px;" },
+          h("img", {
+            src: channelCover(channelCoverPath || video.relPath.split("/")[0]),
+            style: "width:36px;height:36px;border-radius:50%;object-fit:cover;background:#222;",
+            onerror: function() { this.src = '/icons/araglas.png'; }
           }),
-          h("div", { style: "margin-top:32px;" },
-            h("div", {
-              style: "font-size:2em;font-weight:700;margin-bottom:18px;word-break:break-word;overflow-wrap:break-word;white-space:pre-line;max-width:100%;"
-            }, formatTitle(video.name)),
-            h("div", { style: "display:flex;align-items:center;gap:16px;" },
-              h("img", {
-                src: channelCover(channelCoverPath || video.relPath.split("/")[0]),
-                style: "width:40px;height:40px;border-radius:50%;object-fit:cover;background:#222;",
-                onerror: function() { this.src = '/icons/araglas.png'; }
-              }),
-              h("a", {
-                href: `#/channel?id=${encodeURIComponent(channelId)}&name=${encodeURIComponent(channel)}`,
-                style: "color:var(--brand);font-weight:700;text-decoration:none;font-size:1.2em;"
-              }, channel)
-            ),
-            h("div", { style: "color:var(--muted);margin-top:12px;font-size:1.1em;" },
-              `Modified: ${fmtDate(video.mtime)} | Size: ${fmtSize(video.size)}`
-            ),
-            h("div", { style: "display:flex;gap:12px;align-items:center;margin-top:18px;" },
-              h("button", {
-                style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
-                onclick: async () => {
-                  const player = document.getElementById("main-video-player");
-                  if (!player) return;
-                  const ts = Math.floor(player.currentTime);
-                  const title = prompt("Moment at "+ts+"s title:");
-                  if (!title) return;
-                  await fetch("/api/moments", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ relPath: video.relPath, timestamp: ts, title })
-                  });
-                  alert("Moment saved!");
-                }
-              }, h("i", { class: "fa-solid fa-hand-point-up", style: "margin-right:8px;" }), "Add Moment"),
-              h("button", {
-                style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
-                onclick: (e) => {
-                  e.preventDefault();
-                  showPlaylistModal(video);
-                }
-              }, h("i", { class: "fa-solid fa-list", style: "margin-right:8px;" }), "Add to Playlist")
-              ,
-              h("button", {
-                style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;",
-                onclick: async (e) => {
-                  e.preventDefault();
-                  await addFav({
-                    relPath: video.relPath,
-                    name: video.name,
-                    channel: video.channel,
-                    channelId: channelId,
-                    mtime: video.mtime,
-                    size: video.size
-                  });
-                  alert("Added to Favorites!");
-                }
-              }, h("i", { class: "fa-solid fa-heart", style: "margin-right:8px;" }), "Add to Favorites")
-            ),
-            infoSection
-          )
-        )
+          h("a", {
+            href: `#/channel?id=${encodeURIComponent(channelId)}&name=${encodeURIComponent(channel)}`,
+            style: "color:var(--brand);font-weight:700;text-decoration:none;font-size:1.08em;"
+          }, channel),
+          h("span", { style: "margin-left:8px;color:var(--muted);font-size:1em;" }, `|  ${fmtDate(video.mtime)}`)
+        ),
+        h("div", { style: "color:var(--muted);font-size:1em;margin-bottom:8px;" }, `Size: ${fmtSize(video.size)}`),
+        h("div", { style: "display:flex;gap:14px;align-items:center;margin:18px 0 10px 0;flex-wrap:wrap;" },
+          h("button", {
+            style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;",
+            onclick: async () => {
+              const player = document.getElementById("main-video-player");
+              if (!player) return;
+              const ts = Math.floor(player.currentTime);
+              const title = prompt("Moment at "+ts+"s title:");
+              if (!title) return;
+              await fetch("/api/moments", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ relPath: video.relPath, timestamp: ts, title })
+              });
+              alert("Moment saved!");
+            }
+          }, h("i", { class: "fa-solid fa-hand-point-up", style: "margin-right:8px;" }), "Add Moment"),
+          h("button", {
+            style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;",
+            onclick: (e) => {
+              e.preventDefault();
+              showPlaylistModal(video);
+            }
+          }, h("i", { class: "fa-solid fa-list", style: "margin-right:8px;" }), "Add to Playlist"),
+          h("button", {
+            style: "padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;",
+            onclick: async (e) => {
+              e.preventDefault();
+              await addFav({
+                relPath: video.relPath,
+                name: video.name,
+                channel: video.channel,
+                channelId: channelId,
+                mtime: video.mtime,
+                size: video.size
+              });
+              alert("Added to Favorites!");
+            }
+          }, h("i", { class: "fa-solid fa-heart", style: "margin-right:8px;" }), "Add to Favorites")
+        ),
+        infoSection
       )
     )
   );
@@ -283,7 +279,7 @@ async function renderMoments() {
                   const title = formatTitle(relPath.split("/").pop());
                   location.hash = `#/watch?relPath=${encodeURIComponent(relPath)}&channel=${encodeURIComponent(channel)}&title=${encodeURIComponent(title)}&timestamp=${m.timestamp}`;
                 }
-              }, h("i", { class: "fa-solid fa-play", style: "margin-right:6px;" }),
+              },
                 `Play @ ${formatTimestamp(m.timestamp)}`),
               h("div", { style: "font-weight:600;" }, m.title),
               h("button", {
@@ -448,9 +444,12 @@ async function api(url){
 }
 
 function channelCover(relPath){
+  if (!relPath) return '/icons/araglas.png';
+  // Always expect .webp for thumbnails
   return `/api/thumb?relPath=${encodeURIComponent(relPath)}`;
 }
 function videoThumb(relPath){
+  // Always expect .webp for thumbnails
   return `/api/thumb?relPath=${encodeURIComponent(relPath)}`;
 }
 function videoUrl(relPath){
@@ -462,115 +461,10 @@ function videoUrl(relPath){
 function renderLayout(content){
   const app = $("#app");
   app.innerHTML = "";
-  const container = h("div", { class: "container" },
-    h("div", { class: "header" },
-      h("div", { class: "brand" },
-        h("img", { class: "logo", src: "/icons/araglas.png", alt: "Araglas Logo" }),
-        h("div", {}, "Araglas")
-      ),
-      h("div", { class: "searchbar", style: "display:flex;align-items:center;position:relative;" },
-        h("input", {
-          placeholder: "Search videos across all channels…",
-          value: state.query,
-          style: "flex:1;",
-          oninput: (e)=> { state.query = e.target.value; },
-          onkeydown: (e)=>{
-            if (e.key === "Enter") {
-              if (!state.query.trim()) {
-                alert("Please enter a search query.");
-                return;
-              }
-              location.hash = `#/search?q=${encodeURIComponent(state.query)}&page=1`;
-            }
-          }
-        }),
-        h("button", {
-          style: "position:absolute;right:6px;background:none;border:none;cursor:pointer;padding:0 8px;font-size:18px;color:var(--muted);height:100%;display:flex;align-items:center;",
-          onclick: () => {
-            state.query = "";
-            const input = document.querySelector('.searchbar input');
-            if (input) {
-              input.value = "";
-              input.focus();
-            }
-          },
-          title: "Clear search"
-        }, h("i", { class: "fa-solid fa-xmark" }))
-      )
-    ),
-    h("div", { class: "tabs-row" },
-      h("div", { class: "tabs" },
-        tab([
-          h("i", { class: "fa-solid fa-house", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Home"
-        ], ["", "#/"].includes(location.hash), () => location.hash = "#/"),
-        tab([
-          h("i", { class: "fa-solid fa-layer-group", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Channels"
-        ], location.hash.startsWith("#/channels"), () => location.hash = "#/channels"),
-        tab([
-          h("i", { class: "fa-solid fa-heart", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Favorites"
-        ], location.hash.startsWith("#/favorites"), () => location.hash = "#/favorites"),
-        tab([
-          h("i", { class: "fa-solid fa-list", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Playlists"
-        ], location.hash.startsWith("#/playlists"), () => location.hash = "#/playlists"),
-        tab([
-          h("i", { class: "fa-solid fa-chart-column", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Stats"
-        ], location.hash.startsWith("#/stats"), () => location.hash = "#/stats"),
-        tab([
-          h("i", { class: "fa-solid fa-bookmark", style: "margin-right:6px;font-size:15px;vertical-align:-2px;" }),
-          "Moments"
-        ], location.hash.startsWith("#/moments"), () => location.hash = "#/moments")
-      ),
-      h("div", { style: "flex:1" }), // spacer to push buttons to end
-      h("button", {
-        class: "circle-btn",
-        style: "margin-right:8px;",
-        title: "Surprise Me",
-        onclick: async () => {
-          try {
-            const channelsData = await api("/api/channels?page=1&pageSize=96");
-            const channels = channelsData.data;
-            if (!channels.length) return alert("No channels found.");
-            const randChannel = channels[Math.floor(Math.random() * channels.length)];
-            const channelId = randChannel.id;
-            const channelName = randChannel.name;
-            const videosData = await api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=1&pageSize=96`);
-            const videos = videosData.data;
-            if (!videos.length) return alert("No videos found in channel.");
-            const randVideo = videos[Math.floor(Math.random() * videos.length)];
-            location.hash = `#/watch?relPath=${encodeURIComponent(randVideo.relPath)}&channel=${encodeURIComponent(channelName)}&title=${encodeURIComponent(randVideo.name)}`;
-          } catch (err) {
-            alert("Failed to surprise you: " + err.message);
-          }
-        }
-      }, h("i", { class: "fa-solid fa-face-surprise", style: "font-size:16px;" })),
-      h("button", {
-        class: "circle-btn",
-        onclick: cleanupThumbs,
-        title: "Remove thumbnails for deleted videos"
-      },
-        h("i", { class: "fa-solid fa-broom", style: "font-size:16px;" })
-      ),
-      h("button", {
-        class: "circle-btn",
-        onclick: manualRescan,
-        title: "Rescan library"
-      }, h("i", { class: "fa-solid fa-arrows-rotate", style: "font-size:16px;" })),
-      h("button", {
-        class: "circle-btn",
-        id: "theme-toggle-btn",
-        title: "Toggle theme",
-        onclick: toggleTheme
-      }, h("i", { class: "fa-solid fa-circle-half-stroke", style: "font-size:16px;" }))
-    ),
-    content
-  );
+  const container = h("div", { class: "container" }, content);
   app.append(container);
-  ensurePlayer();
+}
+
 // --- Theme logic ---
 async function getThemeSetting() {
   try {
@@ -600,7 +494,6 @@ function applyTheme(theme) {
   link.id = "theme-css-link";
   link.href = theme === "light" ? "/app.light.css" : "/app.css";
   document.head.appendChild(link);
-}
 
 function setTheme(theme) {
   let link = document.querySelector('link[rel="stylesheet"][href^="/app"]');
@@ -611,11 +504,20 @@ function setTheme(theme) {
   window.currentTheme = theme;
 }
 
-async function toggleTheme() {
-  const currentTheme = document.getElementById("theme-css-link")?.href.includes("app.light.css") ? "light" : "dark";
-  const newTheme = currentTheme === "dark" ? "light" : "dark";
-  applyTheme(newTheme);
-  await setThemeSetting(newTheme);
+window.toggleTheme = function toggleTheme() {
+  const darkLink = document.getElementById('theme-dark');
+  const lightLink = document.getElementById('theme-light');
+  if (darkLink.disabled) {
+    darkLink.disabled = false;
+    lightLink.disabled = true;
+    document.body.classList.remove('theme-light');
+    document.body.classList.add('theme-dark');
+  } else {
+    darkLink.disabled = true;
+    lightLink.disabled = false;
+    document.body.classList.remove('theme-dark');
+    document.body.classList.add('theme-light');
+  }
 }
 
 // On page load, apply theme from settings
@@ -623,7 +525,7 @@ getThemeSetting().then(applyTheme);
 }
 
 // Add this function to trigger manual rescan
-async function manualRescan() {
+window.manualRescan = async function manualRescan() {
   try {
     const res = await fetch("/api/rescan", { method: "POST" });
     const data = await res.json();
@@ -639,7 +541,7 @@ async function manualRescan() {
   }
 }
 
-async function cleanupThumbs() {
+window.cleanupThumbs = async function cleanupThumbs() {
   try {
     const res = await fetch("/api/cleanup-thumbs", { method: "POST" });
     const data = await res.json();
@@ -657,6 +559,22 @@ async function cleanupThumbs() {
   }
 }
 
+window.surpriseMe = function surpriseMe() {
+  // True random: pick a random channel, then a random video from that channel
+  api("/api/channels?page=1&pageSize=96").then(channelsData => {
+    const channels = channelsData.data;
+    if (!channels.length) return alert("No channels found.");
+    const randChannel = channels[Math.floor(Math.random() * channels.length)];
+    const channelId = randChannel.id;
+    const channelName = randChannel.name;
+    api(`/api/channels/${encodeURIComponent(channelId)}/videos?page=1&pageSize=96`).then(videosData => {
+      const videos = videosData.data;
+      if (!videos.length) return alert("No videos found in channel.");
+      const randVideo = videos[Math.floor(Math.random() * videos.length)];
+      location.hash = `#/watch?relPath=${encodeURIComponent(randVideo.relPath)}&channel=${encodeURIComponent(channelName)}&title=${encodeURIComponent(randVideo.name)}`;
+    }).catch(err => alert("Failed to fetch videos: " + err.message));
+  }).catch(err => alert("Failed to fetch channels: " + err.message));
+};
 function tab(label, active, onClick){
   return h("div", { class: `tab${active ? " active":""}`, onclick: onClick }, label);
 }
@@ -675,7 +593,6 @@ async function renderHome() {
   );
   renderLayout(
     h("div", {},
-      h("div", { class: "notice" }, "Latest Videos"),
       videos.length ? grid : h("div", { class: "notice" }, "No videos found."),
       pagination(data, (p)=>{ location.hash = `#/?page=${p}&pageSize=${pageSize}`; })
     )
@@ -692,7 +609,6 @@ async function renderPlaylists() {
   const page = state.playlistsPage;
   const totalPages = state.playlistsTotalPages;
   const list = h("div", { style: "max-width:500px;margin:0 auto;" },
-    h("div", { class: "notice" }, "Your Playlists"),
     h("div", {},
       h("form", {
         onsubmit: async (e) => {
@@ -787,14 +703,14 @@ async function renderPlaylistDetail() {
         }
       }),
       h("div", { class: "card-body" },
-        h("div", { class: "card-title", title: v.name }, v.name.length > 25 ? v.name.slice(0, 22) + "..." : v.name),
+        h("div", { class: "card-title", title: v.name }, formatTitle(v.name).length > 25 ? formatTitle(v.name).slice(0, 22) + "..." : formatTitle(v.name)),
         h("div", { class: "card-sub" }, [v.channel || "", v.mtime ? fmtDate(v.mtime) : ""].filter(Boolean).join(" | ")),
         h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
         h("div", { style: "display:flex;gap:8px;align-items:center;" },
-          h("button", {
-            class: "icon-btn",
+          h("span", {
+            class: "remove-link",
             title: "Remove from Playlist",
-            style: "color:var(--muted);font-size:18px;vertical-align:-2px;",
+            style: "color:var(--danger);font-size:0.98em;cursor:pointer;text-decoration:underline;",
             onclick: async (e) => {
               e.preventDefault(); e.stopPropagation();
               if (confirm("Remove this video from playlist?")) {
@@ -803,7 +719,7 @@ async function renderPlaylistDetail() {
                 onRoute();
               }
             }
-          }, h("i", { class: "fa-solid fa-xmark" }))
+          }, "Remove from Playlist")
         )
       )
     );
@@ -813,7 +729,7 @@ async function renderPlaylistDetail() {
   );
   renderLayout(
     h("div", {},
-      h("div", { class: "notice" }, `Playlist: ${playlist.name}`),
+  h("div", { class: "notice", style: "text-align:center;font-size:1.2em;font-weight:700;margin:18px 0;" }, `Playlist: ${playlist.name}`),
       videos.length ? grid : h("div", { class: "notice" }, "No videos in this playlist."),
       pagination({ page, totalPages }, (p) => { location.hash = `#/playlist?id=${encodeURIComponent(id)}&page=${p}&pageSize=${pageSize}`; })
     )
@@ -843,7 +759,7 @@ async function renderChannel() {
   );
   renderLayout(
     h("div", {},
-      h("div", { class: "notice" }, `Channel: ${name}`),
+  h("div", { class: "notice", style: "text-align:center;font-size:1.2em;font-weight:700;margin:18px 0;" }, `Channel: ${name}`),
       //searchInline(q, (val) => location.hash = `#/channel?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&q=${encodeURIComponent(val)}&page=1`),
       data.data.length ? grid : h("div", { class: "notice" }, "No videos here."),
       pagination(data, (p) => { location.hash = `#/channel?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&q=${encodeURIComponent(q)}&page=${p}&pageSize=${pageSize}`; })
@@ -947,11 +863,14 @@ async function renderChannels() {
 async function renderStats() {
   const stats = await api("/api/stats");
   renderLayout(
-    h("div", { class: "stats-page" },
-      h("h2", {}, "Library Stats"),
-      h("div", { class: "stats-list" },
-        h("div", {}, `Channels: ${stats.channels}`),
-        h("div", {}, `Videos: ${stats.videos}`),
+    h("div", {
+      class: "stats-page",
+      style: "display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;"
+    },
+      h("h2", { style: "margin-bottom:24px;" }, "Library Stats"),
+      h("div", { class: "stats-list", style: "font-size:1.3em;text-align:center;" },
+        h("div", { style: "margin-bottom:10px;" }, `Channels: ${stats.channels}`),
+        h("div", { style: "margin-bottom:10px;" }, `Videos: ${stats.videos}`),
         h("div", {}, `Total Size: ${fmtSize(stats.totalSize)}`)
       )
     )
@@ -975,26 +894,73 @@ function cardChannel(c, onClick) {
 
 function cardVideo(v, onPlay) {
   const isFav = state.favorites.some(f => f.relPath === v.relPath);
-
-  // Truncate title if longer than 25 chars
   const formatted = formatTitle(v.name);
-  const showTitle = formatted.length > 25 ? formatted.slice(0, 22) + "..." : formatted;
-
-  // Info line: channel | date
+  const showTitle = formatted.length > 40 ? formatted.slice(0, 37) + "..." : formatted;
   const infoLine = [
     v.channel || "",
     v.mtime ? fmtDate(v.mtime) : ""
   ].filter(Boolean).join(" | ");
 
-  // Add to Playlist button handler
-  function openPlaylistModal(e) {
-    e.preventDefault(); e.stopPropagation();
-    showPlaylistModal(v);
-  }
-
   // Link to /watch page
   function goToWatch() {
     location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(formatTitle(v.name))}`;
+  }
+
+  // Dropdown menu logic
+  function showDropdown(e) {
+    e.stopPropagation();
+    const old = document.getElementById("video-dropdown");
+    // If dropdown is already open and the button is clicked again, close it and return
+    if (old) {
+      old.remove();
+      return;
+    }
+    // Otherwise, open the dropdown
+    const rect = e.currentTarget.getBoundingClientRect();
+    const menuWidth = 220; // px, slightly wider for touch
+    let left = rect.left;
+    // If menu would overflow right edge, shift it left
+    if (left + menuWidth > window.innerWidth - 8) {
+      left = window.innerWidth - menuWidth - 8;
+    }
+    // Clamp to min 8px from left edge
+    if (left < 8) left = 8;
+    const isFav = state.favorites.some(f => f.relPath === v.relPath);
+    const menu = h("div", {
+      id: "video-dropdown",
+      style: `position:fixed;z-index:1000;top:${rect.bottom+6}px;left:${left}px;background:var(--card);color:var(--text);border-radius:10px;box-shadow:0 2px 16px rgba(0,0,0,0.18);padding:8px 0;min-width:${menuWidth}px;max-width:calc(100vw - 16px);`
+    },
+      h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;", onclick: (ev)=>{ ev.stopPropagation(); toggleFav(ev, v); menu.remove(); } },
+        isFav
+          ? h("i", { class: "fa-solid fa-heart", style: `color:#e53935;font-size:18px;` })
+          : h("i", { class: "fa-regular fa-heart", style: `color:var(--muted);font-size:18px;` }),
+        isFav ? "Remove from Favorites" : "Add to Favorites"
+      ),
+      h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;", onclick: (ev)=>{ ev.stopPropagation(); showPlaylistModal(v); menu.remove(); } },
+        h("i", { class: "fa-solid fa-list", style: "color:var(--muted);font-size:18px;" }),
+        "Add to Playlist"
+      ),
+      (state.currentPlaylistId ?
+        h("button", { class: "dropdown-item", style: "width:100%;text-align:left;padding:10px 18px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;color:#d32f2f;", onclick: async (ev)=>{
+          ev.stopPropagation();
+          if (confirm("Remove this video from playlist?")) {
+            await removeVideoFromPlaylist(state.currentPlaylistId, v.relPath);
+            menu.remove();
+            onRoute();
+          }
+        }},
+          h("i", { class: "fa-solid fa-xmark", style: "color:#d32f2f;font-size:18px;" }),
+          "Remove from Playlist"
+        ) : null)
+    );
+    document.body.appendChild(menu);
+    // Remove dropdown on click outside
+    setTimeout(()=>{
+      document.addEventListener("click", function handler() {
+        menu.remove();
+        document.removeEventListener("click", handler);
+      });
+    }, 10);
   }
 
   return h("div", { class: "card", onclick: goToWatch },
@@ -1012,25 +978,14 @@ function cardVideo(v, onPlay) {
     ),
     h("div", { class: "card-body" },
       h("div", { class: "card-title", title: formatted }, showTitle),
-      h("div", { class: "card-sub" }, infoLine),
-      h("div", { class: "card-size" }, v.size ? fmtSize(v.size) : ""),
-      h("div", { style: "display:flex;gap:8px;align-items:center;" },
+      h("div", { style: "display:flex;align-items:center;gap:8px;justify-content:space-between;" },
+        h("div", { class: "card-sub" }, infoLine),
         h("button", {
-          class: `icon-btn fav-btn`,
-          onclick: (e) => { e.stopPropagation(); toggleFav(e, v); },
-          title: isFav ? "Unfavorite" : "Favorite"
-        },
-          h("i", {
-            class: isFav ? "fa-solid fa-heart" : "fa-regular fa-heart",
-            style: `color:${isFav ? "red" : "var(--muted)"};font-size:18px;vertical-align:-2px;`
-          })
-        ),
-        h("button", {
-          class: "icon-btn",
-          title: "Add to Playlist",
-          onclick: (e) => { e.stopPropagation(); openPlaylistModal(e); },
-          style: "margin-left:4px;"
-        }, h("i", { class: "fa-solid fa-list", style: "font-size:18px;vertical-align:-2px;" }))
+          class: "icon-btn video-menu-btn",
+          title: "More options",
+          style: "background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:8px 12px;margin-left:auto;min-width:40px;min-height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background 0.15s;",
+          onclick: function(ev) { ev.stopPropagation(); showDropdown(ev); }
+        }, h("i", { class: "fa-solid fa-ellipsis-vertical", style: "font-size:22px;margin:0;pointer-events:none;" }))
       )
     )
   );
@@ -1039,16 +994,30 @@ function cardVideo(v, onPlay) {
 // --- Playlist Modal ---
 function showPlaylistModal(video) {
   // Remove any existing modal
-  const old = $("#playlist-modal");
+  const old = document.getElementById("playlist-modal");
   if (old) old.remove();
 
-  // Load playlists
-  loadPlaylists().then(() => {
-    const playlists = state.playlists;
-    // Track selected playlists
-    let selected = new Set();
+  // Infinite scroll state for modal only
+  let playlistPage = 1;
+  let loading = false;
+  let allLoaded = false;
+  let playlists = [];
+  let selected = new Set();
 
-    // Modal content
+  async function loadMorePlaylists() {
+    if (loading || allLoaded) return;
+    loading = true;
+    const resp = await api(`/api/playlists?page=${playlistPage}&pageSize=10`);
+    if (Array.isArray(resp.data)) {
+      playlists = playlists.concat(resp.data);
+      if (playlists.length >= (resp.total || 0)) allLoaded = true;
+    }
+    playlistPage++;
+    loading = false;
+    renderModal();
+  }
+
+  function renderModal() {
     const modal = h("div", {
       id: "playlist-modal",
       style: `position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center;`
@@ -1057,13 +1026,21 @@ function showPlaylistModal(video) {
         style: `background:var(--card);padding:28px 24px;border-radius:14px;min-width:320px;max-width:90vw;box-shadow:0 2px 24px rgba(0,0,0,0.18);position:relative;`
       },
         h("div", { style: "font-weight:700;font-size:1.1em;margin-bottom:12px;" }, "Add to Playlists"),
-        h("div", { style: "margin-bottom:14px;" },
+        h("div", {
+          style: "margin-bottom:14px;max-height:260px;overflow-y:auto;",
+          onscroll: function(e) {
+            const el = e.target;
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 24) {
+              loadMorePlaylists();
+            }
+          }
+        },
           playlists.length ?
             playlists.map(pl =>
               h("label", { style: "display:flex;align-items:center;gap:8px;margin-bottom:6px;" },
                 h("input", {
                   type: "checkbox",
-                  checked: false,
+                  checked: selected.has(pl.id),
                   onchange: (e) => {
                     if (e.target.checked) selected.add(pl.id);
                     else selected.delete(pl.id);
@@ -1071,7 +1048,7 @@ function showPlaylistModal(video) {
                 }),
                 h("span", {}, pl.name)
               )
-            ) : h("div", { style: "color:var(--muted);margin-bottom:8px;" }, "No playlists yet.")
+            ) : h("div", { style: "color:var(--muted);margin-bottom:8px;" }, loading ? "Loading..." : "No playlists yet.")
         ),
         h("form", {
           onsubmit: async (e) => {
@@ -1080,9 +1057,11 @@ function showPlaylistModal(video) {
             if (!name) return;
             await createPlaylist(name);
             e.target.reset();
-            await loadPlaylists();
-            // Re-render modal with new playlist
-            showPlaylistModal(video);
+            // Reset and reload playlists
+            playlistPage = 1;
+            playlists = [];
+            allLoaded = false;
+            await loadMorePlaylists();
           },
           style: "display:flex;gap:8px;margin-bottom:14px;"
         },
@@ -1113,8 +1092,14 @@ function showPlaylistModal(video) {
         }, "×")
       )
     );
+    // Remove any existing modal and add new
+    const old = document.getElementById("playlist-modal");
+    if (old) old.remove();
     document.body.append(modal);
-  });
+  }
+
+  // Initial load
+  loadMorePlaylists();
 }
 
 function rowVideo(channelName, v) {
@@ -1149,7 +1134,7 @@ function rowVideo(channelName, v) {
 
 function pagination(meta, onPage){
   const btn = (label, p, disabled=false) =>
-    h("button", { disabled, onclick: ()=> onPage(p) }, label);
+    h("button", { class: "pagination-btn", disabled, onclick: ()=> onPage(p) }, label);
 
   return h("div", { class: "pagination" },
     btn("« First", 1, meta.page === 1),
@@ -1179,34 +1164,6 @@ function lazyThumbs(){
   imgs.forEach(i => io.observe(i));
 }
 
-// --- player modal ---
-function ensurePlayer(){
-  if ($(".player")) return;
-  document.body.append(
-    h("div", { class: "player", id:"player" },
-      h("div", { class:"player-inner" },
-        h("video", { id:"player-video", controls: true
-
-         }),
-        h("div", { style:"display:flex; align-items:center; justify-content:space-between; padding:10px 12px" },
-          h("div", { id:"player-title", style:"font-weight:700" }, ""),
-          h("button", { class:"icon-btn", onclick: closePlayer }, "Close")
-        )
-      )
-    ));
-}
-function openPlayer(src, title, channel){
-  const el = $("#player");
-  $("#player-video").src = src;
-  $("#player-title").textContent = (channel ? channel + " • " : "") + formatTitle(title);
-  el.classList.add("open");
-}
-function closePlayer(){
-  const v = $("#player-video");
-  v.pause();
-  v.src = "";
-  $("#player").classList.remove("open");
-}
 // --- router hook ---
 function onRoute(){
   const [base] = location.hash.split("?");
@@ -1217,4 +1174,7 @@ function onRoute(){
   });
 }
 window.addEventListener("hashchange", onRoute);
-onRoute();
+(async () => {
+  await loadFavs();
+  onRoute();
+})();
