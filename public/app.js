@@ -485,44 +485,30 @@ async function setThemeSetting(theme) {
 }
 
 function applyTheme(theme) {
-  // Remove existing theme CSS
-  const oldLink = document.getElementById("theme-css-link");
-  if (oldLink) oldLink.remove();
-  // Add new theme CSS
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.id = "theme-css-link";
-  link.href = theme === "light" ? "/app.light.css" : "/app.css";
-  document.head.appendChild(link);
-
-function setTheme(theme) {
-  let link = document.querySelector('link[rel="stylesheet"][href^="/app"]');
-  if (!link) return;
-  // Add a cache-busting query string
-  const ts = Date.now();
-  link.href = theme === "light" ? `/app.light.css?ts=${ts}` : `/app.css?ts=${ts}`;
+  const darkLink = document.getElementById("theme-dark");
+  const lightLink = document.getElementById("theme-light");
+  if (theme === "light") {
+    if (darkLink) darkLink.disabled = true;
+    if (lightLink) lightLink.disabled = false;
+  } else {
+    if (darkLink) darkLink.disabled = false;
+    if (lightLink) lightLink.disabled = true;
+  }
   window.currentTheme = theme;
 }
 
-window.toggleTheme = function toggleTheme() {
-  const darkLink = document.getElementById('theme-dark');
-  const lightLink = document.getElementById('theme-light');
-  if (darkLink.disabled) {
-    darkLink.disabled = false;
-    lightLink.disabled = true;
-    document.body.classList.remove('theme-light');
-    document.body.classList.add('theme-dark');
-  } else {
-    darkLink.disabled = true;
-    lightLink.disabled = false;
-    document.body.classList.remove('theme-dark');
-    document.body.classList.add('theme-light');
-  }
+async function toggleTheme() {
+  const currentTheme = window.currentTheme || (document.getElementById("theme-light")?.disabled ? "dark" : "light");
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  applyTheme(newTheme);
+  await setThemeSetting(newTheme);
 }
 
 // On page load, apply theme from settings
 getThemeSetting().then(applyTheme);
-}
+
+// Expose for navbar button
+window.toggleTheme = toggleTheme;
 
 // Add this function to trigger manual rescan
 window.manualRescan = async function manualRescan() {

@@ -1,6 +1,9 @@
 /* app-main-light.css: Light theme for Araglas app */
 
 /* Light Theme CSS */
+
+/* app-main-light.css: Light theme for Araglas app */
+
 :root{
   --bg: #fff;
   --card: #fff;
@@ -10,10 +13,15 @@
   --brand-2: #c00;
   --ring: rgba(255,0,0,0.12);
 }
+*{ box-sizing: border-box }
+html,body,#app{ height: 100% }
 body{
+  margin: 0;
   background: #fff;
   color: var(--text);
+  font-family: Roboto, Arial, Helvetica, sans-serif;
 }
+
 .container{
   max-width: 1200px; margin: 0 auto; padding: 24px;
 }
@@ -36,19 +44,12 @@ body{
 .searchbar input{
   width: min(70vw, 480px);
   padding: 12px 14px;
-  border-radius: 14px;
-  border: 1.5px solid #ddd;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  background: #fff;
-  color: var(--text);
+  border-radius: 14px; border: 1px solid #ddd;
+  background: #fff; color: var(--text);
   outline: none;
   transition: box-shadow .2s, border-color .2s;
 }
-.searchbar input:focus{
-  box-shadow: 0 0 0 6px var(--ring);
-  border-color: var(--brand);
-  background: #fff;
-}
+.searchbar input:focus{ box-shadow: 0 0 0 6px var(--ring); border-color: var(--brand) }
 .pill{
   display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px;
   border-radius: 999px; background: rgba(124, 240, 255, .1); border: 1px solid rgba(124, 240, 255, .2);
@@ -67,8 +68,8 @@ body{
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
   margin: 18px 0 32px 0;
 }
 
@@ -138,10 +139,6 @@ body{
   display: none;
 }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-}
 .navbar {
   background: #fff !important;
 }
@@ -247,7 +244,6 @@ body {
   text-align: center;
   margin-bottom: 8px;
 }
-
 /* Pagination styles for channels page */
 .pagination {
   display: flex;
@@ -266,7 +262,7 @@ body {
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
   transition: background 0.18s, color 0.18s, box-shadow 0.18s;
   outline: none;
   display: inline-block;
@@ -290,30 +286,7 @@ body {
   color: #bbb;
   box-shadow: none;
 }
-
 /* Responsive grid/cards for mobile */
-@media (max-width: 600px) {
-  .container {
-    padding: 8px;
-  }
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 8px;
-  }
-  .card {
-    border-radius: 8px;
-    font-size: 0.98rem;
-  }
-  .channels-header {
-    flex-direction: column;
-    gap: 10px;
-  }
-  .searchbar {
-    width: 100%;
-    min-width: 0;
-  }
-}
-
 @media (max-width: 900px) {
   .grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -321,5 +294,24 @@ body {
   }
   .card-body {
     padding: 12px 10px 10px 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 8px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .card {
+    border-radius: 12px;
+  }
+  .thumb {
+    border-radius: 12px;
+  }
+  .card-body {
+    padding: 10px 6px 8px 6px;
   }
 }
