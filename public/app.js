@@ -863,11 +863,14 @@ async function renderChannels() {
 async function renderStats() {
   const stats = await api("/api/stats");
   renderLayout(
-    h("div", { class: "stats-page" },
-      h("h2", {}, "Library Stats"),
-      h("div", { class: "stats-list" },
-        h("div", {}, `Channels: ${stats.channels}`),
-        h("div", {}, `Videos: ${stats.videos}`),
+    h("div", {
+      class: "stats-page",
+      style: "display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;"
+    },
+      h("h2", { style: "margin-bottom:24px;" }, "Library Stats"),
+      h("div", { class: "stats-list", style: "font-size:1.3em;text-align:center;" },
+        h("div", { style: "margin-bottom:10px;" }, `Channels: ${stats.channels}`),
+        h("div", { style: "margin-bottom:10px;" }, `Videos: ${stats.videos}`),
         h("div", {}, `Total Size: ${fmtSize(stats.totalSize)}`)
       )
     )
