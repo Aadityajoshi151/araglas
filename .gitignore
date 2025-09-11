@@ -10,6 +10,7 @@ moments.json
 thumbs.db
 *.log
 *.lock
+*.webp
 *.sqlite
 *.sqlite3
 dist
