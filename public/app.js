@@ -3,6 +3,7 @@ import { formatTitle, $, h, fmtSize, fmtDate, formatTimestamp } from '/core/help
 import { api, channelCover, videoThumb, videoUrl } from '/core/api.js';
 import { renderLayout, pagination, lazyThumbs } from '/core/ui.js';
 import { state, loadFavs, loadPlaylists, createPlaylist, deletePlaylist, addVideoToPlaylist, removeVideoFromPlaylist, addFav, removeFav } from '/core/stores.js';
+import { parseHashParams, listen as listenHashRouter, runRoute } from '/core/router-hash.js';
 // --- tiny router (hash-based) ---
 const routes = {
   "": renderHome,
@@ -583,11 +584,7 @@ async function renderPlaylistDetail() {
   lazyThumbs();
 }
 
-function parseHashParams() {
-  const hash = location.hash.split("?")[1] || "";
-  const params = new URLSearchParams(hash);
-  return Object.fromEntries(params.entries());
-}
+// parseHashParams moved to /core/router-hash.js
 
 async function renderChannel() {
   const params = parseHashParams();
@@ -984,16 +981,16 @@ function rowVideo(channelName, v) {
 // lazyThumbs moved to /core/ui.js
 
 // --- router hook ---
-function onRoute(){
-  const [base] = location.hash.split("?");
-  const fn = routes[base] || renderHome;
-  fn().catch(err=>{
+// Router bootstrap
+listenHashRouter(routes, renderHome, (err)=>{
+  console.error(err);
+  renderLayout(h("div", { class:"notice" }, "Something went wrong."));
+});
+
+(async () => {
+  await loadFavs();
+  await runRoute(routes, renderHome, (err)=>{
     console.error(err);
     renderLayout(h("div", { class:"notice" }, "Something went wrong."));
   });
-}
-window.addEventListener("hashchange", onRoute);
-(async () => {
-  await loadFavs();
-  onRoute();
 })();
