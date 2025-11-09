@@ -1,10 +1,8 @@
 // Extracted helpers
-import { formatTitle, $, h, fmtSize, fmtDate, formatTimestamp } from '/core/helpers.js';
-import { api, channelCover, videoThumb, videoUrl } from '/core/api.js';
-import { renderLayout, pagination, lazyThumbs } from '/core/ui.js';
-import { state, loadFavs, loadPlaylists, createPlaylist, deletePlaylist, addVideoToPlaylist, removeVideoFromPlaylist, addFav, removeFav } from '/core/stores.js';
-import { parseHashParams, listen as listenHashRouter, runRoute } from '/core/router-hash.js';
-import { cardChannel, cardVideo, showPlaylistModal } from '/core/components.js';
+import { h } from '/core/helpers.js';
+import { renderLayout } from '/core/ui.js';
+import { loadFavs } from '/core/stores.js';
+import { listen as listenHashRouter, runRoute } from '/core/router-hash.js';
 import { renderHome } from '/pages/home.js';
 import { renderPlaylists, renderPlaylistDetail } from '/pages/playlists.js';
 import { renderFavorites } from '/pages/favorites.js';
@@ -13,6 +11,7 @@ import { renderChannels } from '/pages/channels.js';
 import { renderChannel } from '/pages/channel.js';
 import { renderMoments } from '/pages/moments.js';
 import { renderWatch } from '/pages/watch.js';
+import { renderStats } from '/pages/stats.js';
 // --- tiny router (hash-based) ---
 const routes = {
   "": renderHome,
@@ -30,20 +29,6 @@ const routes = {
 
 
 // Utility moved to /core/helpers.js: formatTimestamp
-
-
-
-// Toggle favorite
-async function toggleFav(e, item) {
-  e.preventDefault(); e.stopPropagation();
-  const isFav = state.favorites.some(f => f.relPath === item.relPath);
-  if (isFav) {
-    await removeFav(item.relPath);
-  } else {
-    await addFav(item);
-  }
-  runRoute(routes, renderHome, (err)=>console.error(err));
-}
 
 // --- utils --- (moved to /core/helpers.js)
 
@@ -103,29 +88,7 @@ async function renderStats() {
   );
 }
 
-// --- UI components ---
-// cardChannel moved to /core/components.js
-
-
-// cardVideo & showPlaylistModal moved to /core/components.js
-
-function rowVideo(channelName, v) {
-  const favKey = JSON.stringify({ relPath: v.relPath, name: v.name, channel: channelName });
-  const isFav = state.favorites.has(favKey);
-  const formatted = formatTitle(v.name);
-  return h("div", { class: "video-row" },
-    h("img", { class: "thumb lazy", "data-src": videoThumb(v.relPath), alt: formatted, onclick: ()=> {
-      location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(channelName)}&title=${encodeURIComponent(formatTitle(v.name))}`;
-    } }),
-    h("div", {},
-      h("div", { class: "video-title" }, formatted),
-      h("div", { class: "video-meta" }, `${channelName} • ${fmtSize(v.size)} • ${fmtDate(v.mtime)}`),
-      h("div", { class: "actions", style:"margin-top:8px" },
-        h("button", { class: `icon-btn ${isFav ? "active":""}`, onclick: (e)=>toggleFav(e, favKey) }, svgStar(), isFav ? "Favorited" : "Favorite"),
-      )
-    ),
-  );
-}
+// --- UI components moved to /core/components.js ---
 
 // function searchInline(value, onSubmit){
 //   return h("div", { class:"searchbar", style:"margin: 4px 0 14px 0" },
