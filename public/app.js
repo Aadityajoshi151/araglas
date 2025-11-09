@@ -1,5 +1,6 @@
 // Extracted helpers
 import { formatTitle, $, h, fmtSize, fmtDate, formatTimestamp } from '/core/helpers.js';
+import { api, channelCover, videoThumb, videoUrl } from '/core/api.js';
 // --- tiny router (hash-based) ---
 const routes = {
   "": renderHome,
@@ -407,25 +408,7 @@ async function toggleFav(e, item) {
 
 // --- utils --- (moved to /core/helpers.js)
 
-async function api(url){
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
-}
-
-function channelCover(relPath){
-  if (!relPath) return '/icons/araglas.png';
-  // Always expect .webp for thumbnails
-  return `/api/thumb?relPath=${encodeURIComponent(relPath)}`;
-}
-function videoThumb(relPath){
-  // Always expect .webp for thumbnails
-  return `/api/thumb?relPath=${encodeURIComponent(relPath)}`;
-}
-function videoUrl(relPath){
-  // You said you're OK with the URL being the file path while playing
-  return `/video/${relPath}`;
-}
+// API + URL helpers moved to /core/api.js
 
 // --- layout & header ---
 function renderLayout(content){
