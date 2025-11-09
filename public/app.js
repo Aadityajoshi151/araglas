@@ -2,6 +2,7 @@
 import { formatTitle, $, h, fmtSize, fmtDate, formatTimestamp } from '/core/helpers.js';
 import { api, channelCover, videoThumb, videoUrl } from '/core/api.js';
 import { renderLayout, pagination, lazyThumbs } from '/core/ui.js';
+import { state, loadFavs, loadPlaylists, createPlaylist, deletePlaylist, addVideoToPlaylist, removeVideoFromPlaylist, addFav, removeFav } from '/core/stores.js';
 // --- tiny router (hash-based) ---
 const routes = {
   "": renderHome,
@@ -304,96 +305,6 @@ async function renderMoments() {
   );
 }
 
-const state = {
-  query: "",
-  page: 1,
-  pageSize: 8,
-  currentChannelId: null,
-  favorites: [],
-  playlists: [],
-  currentPlaylistId: null
-};
-
-// Load favorites from API
-async function loadFavs() {
-  try {
-    const favs = await api("/api/favorites");
-    state.favorites = favs;
-  } catch {
-    state.favorites = [];
-  }
-}
-
-// --- Playlists ---
-async function loadPlaylists() {
-  try {
-    const params = state.playlistsPage ? `?page=${state.playlistsPage}&pageSize=${state.playlistsPageSize}` : '';
-    const resp = await api(`/api/playlists${params}`);
-    state.playlists = resp.data || [];
-    state.playlistsTotal = resp.total || 0;
-    state.playlistsPage = resp.page || 1;
-    state.playlistsPageSize = resp.pageSize || 15;
-    state.playlistsTotalPages = resp.totalPages || 1;
-  } catch {
-    state.playlists = [];
-    state.playlistsTotal = 0;
-    state.playlistsPage = 1;
-    state.playlistsPageSize = 15;
-    state.playlistsTotalPages = 1;
-  }
-}
-
-async function createPlaylist(name) {
-  await fetch("/api/playlists", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name })
-  });
-  await loadPlaylists();
-}
-
-async function deletePlaylist(id) {
-  await fetch(`/api/playlists/${encodeURIComponent(id)}`, {
-    method: "DELETE"
-  });
-  await loadPlaylists();
-}
-
-async function addVideoToPlaylist(playlistId, video) {
-  await fetch(`/api/playlists/${encodeURIComponent(playlistId)}/add`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(video)
-  });
-}
-
-async function removeVideoFromPlaylist(playlistId, relPath) {
-  await fetch(`/api/playlists/${encodeURIComponent(playlistId)}/remove`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ relPath })
-  });
-}
-
-// Add favorite via API
-async function addFav(item) {
-  await fetch("/api/favorites", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(item)
-  });
-  await loadFavs();
-}
-
-// Remove favorite via API
-async function removeFav(relPath) {
-  await fetch("/api/favorites", {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ relPath })
-  });
-  await loadFavs();
-}
 
 // Toggle favorite
 async function toggleFav(e, item) {
