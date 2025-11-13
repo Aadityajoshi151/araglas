@@ -3,11 +3,11 @@ import { h, fmtDate, fmtSize, formatTitle } from '/core/helpers.js';
 import { api, videoUrl } from '/core/api.js';
 import { renderLayout, pagination, lazyThumbs } from '/core/ui.js';
 import { cardVideo } from '/core/components.js';
-import { parseHashParams } from '/core/router-hash.js';
+import { getQueryParams } from '/pages/_shared.js';
 import { state } from '/core/stores.js';
 
 export async function renderChannel() {
-  const params = parseHashParams();
+  const params = getQueryParams();
   const id = params.id;
   const name = params.name || id;
   const page = Number(params.page || 1);
@@ -20,7 +20,7 @@ export async function renderChannel() {
     h('div', {},
       h('div', { class: 'notice', style: 'text-align:center;font-size:1.2em;font-weight:700;margin:18px 0;' }, `Channel: ${name}`),
       data.data.length ? grid : h('div', { class: 'notice' }, 'No videos here.'),
-      pagination(data, (p) => { location.hash = `#/channel?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&q=${encodeURIComponent(q)}&page=${p}&pageSize=${pageSize}`; })
+  pagination(data, (p) => { location.href = `/channel/?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&q=${encodeURIComponent(q)}&page=${p}&pageSize=${pageSize}`; })
     )
   );
   lazyThumbs();

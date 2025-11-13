@@ -45,6 +45,39 @@ app.disable("x-powered-by");
 app.use(morgan("tiny"));
 app.use(express.static(path.join(__dirname, "..", "public"), { maxAge: "1h", etag: true }));
 
+// Path-based pages (no hash routing)
+app.get('/', (req, res) => res.redirect('/home/'));
+app.get(['/home', '/home/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'home', 'index.html'));
+});
+app.get(['/channels', '/channels/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'channels', 'index.html'));
+});
+app.get(['/channel', '/channel/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'channel', 'index.html'));
+});
+app.get(['/search', '/search/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'search', 'index.html'));
+});
+app.get(['/playlists', '/playlists/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'playlists', 'index.html'));
+});
+app.get(['/playlist', '/playlist/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'playlist', 'index.html'));
+});
+app.get(['/favorites', '/favorites/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'favorites', 'index.html'));
+});
+app.get(['/moments', '/moments/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'moments', 'index.html'));
+});
+app.get(['/stats', '/stats/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'stats', 'index.html'));
+});
+app.get(['/watch', '/watch/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'watch', 'index.html'));
+});
+
 // Serve actual videos directly with range support using express static under /video
 app.use("/video", express.static(LIBRARY_DIR, {
   acceptRanges: true,
@@ -430,10 +463,8 @@ app.delete("/api/moments", express.json(), async (req, res) => {
   res.json({ ok: true });
 });
 
-// Fallback to SPA
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "public", "index.html"));
-});
+// Fallback to home for unknown paths under our domain (optional)
+app.get('*', (req, res) => res.redirect('/home/'));
 
 app.listen(PORT, () => {
   console.log(`Araglas running on http://localhost:${PORT}`);

@@ -1,6 +1,6 @@
 // pages/playlists.js
 import { h, fmtDate, fmtSize, formatTitle } from '/core/helpers.js';
-import { parseHashParams } from '/core/router-hash.js';
+import { getQueryParams } from '/pages/_shared.js';
 import { api, videoThumb, videoUrl } from '/core/api.js';
 import { renderLayout, pagination, lazyThumbs } from '/core/ui.js';
 import { state, loadPlaylists, createPlaylist, deletePlaylist, removeVideoFromPlaylist } from '/core/stores.js';
@@ -23,8 +23,8 @@ export async function renderPlaylists() {
           if (!name) return alert('Enter playlist name');
           await createPlaylist(name);
           e.target.reset();
-          // Refresh via hashchange
-          window.dispatchEvent(new Event('hashchange'));
+          // Refresh page after creating playlist
+          location.reload();
         },
         style: 'display:flex;gap:8px;margin-bottom:18px;'
       },
@@ -36,7 +36,7 @@ export async function renderPlaylists() {
           playlists.map(pl =>
             h('div', {
               style: 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #222;cursor:pointer;',
-              onclick: () => location.hash = `#/playlist?id=${encodeURIComponent(pl.id)}`
+              onclick: () => location.href = `/playlist/?id=${encodeURIComponent(pl.id)}`
             },
               h('div', {},
                 h('span', { style: 'font-weight:700;font-size:1.1em;' }, pl.name),
@@ -48,7 +48,7 @@ export async function renderPlaylists() {
                   e.stopPropagation();
                   if (confirm(`Delete playlist '${pl.name}'?`)) {
                     await deletePlaylist(pl.id);
-                    window.dispatchEvent(new Event('hashchange'));
+                    location.reload();
                   }
                 }
               }, h('i', { class: 'fa-solid fa-trash' }))
@@ -58,13 +58,13 @@ export async function renderPlaylists() {
             h('button', {
               style: `padding:6px 14px;border-radius:8px;border:none;background:${page > 1 ? 'var(--brand)' : '#444'};color:var(--card);cursor:${page > 1 ? 'pointer' : 'not-allowed'};`,
               disabled: page <= 1,
-              onclick: () => { if (page > 1) { state.playlistsPage = page - 1; window.dispatchEvent(new Event('hashchange')); } }
+              onclick: () => { if (page > 1) { state.playlistsPage = page - 1; location.reload(); } }
             }, 'Previous'),
             h('span', { style: 'align-self:center;' }, `Page ${page} of ${totalPages}`),
             h('button', {
               style: `padding:6px 14px;border-radius:8px;border:none;background:${page < totalPages ? 'var(--brand)' : '#444'};color:var(--card);cursor:${page < totalPages ? 'pointer' : 'not-allowed'};`,
               disabled: page >= totalPages,
-              onclick: () => { if (page < totalPages) { state.playlistsPage = page + 1; window.dispatchEvent(new Event('hashchange')); } }
+              onclick: () => { if (page < totalPages) { state.playlistsPage = page + 1; location.reload(); } }
             }, 'Next')
           )
         ) : h('div', { class: 'notice' }, 'No playlists yet.')
@@ -75,8 +75,9 @@ export async function renderPlaylists() {
 
 // Single playlist detail page
 export async function renderPlaylistDetail() {
-  const params = parseHashParams();
+  const params = getQueryParams();
   const id = params.id;
+  state.currentPlaylistId = id;
   await loadPlaylists();
   const playlist = state.playlists.find(pl => pl.id === id);
   if (!playlist) {
@@ -94,7 +95,7 @@ export async function renderPlaylistDetail() {
         class: 'thumb lazy',
         'data-src': videoThumb(v.relPath),
         alt: v.name,
-        onclick: () => { location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(formatTitle(v.name))}`; }
+  onclick: () => { location.href = `/watch/?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(formatTitle(v.name))}`; }
       }),
       h('div', { class: 'card-body' },
         h('div', { class: 'card-title', title: v.name }, formatTitle(v.name).length > 25 ? formatTitle(v.name).slice(0, 22) + '...' : formatTitle(v.name)),
@@ -110,7 +111,7 @@ export async function renderPlaylistDetail() {
               if (confirm('Remove this video from playlist?')) {
                 await removeVideoFromPlaylist(playlist.id, v.relPath);
                 await loadPlaylists();
-                window.dispatchEvent(new Event('hashchange'));
+                location.reload();
               }
             }
           }, 'Remove from Playlist')
@@ -124,7 +125,7 @@ export async function renderPlaylistDetail() {
     h('div', {},
       h('div', { class: 'notice', style: 'text-align:center;font-size:1.2em;font-weight:700;margin:18px 0;' }, `Playlist: ${playlist.name}`),
       videos.length ? grid : h('div', { class: 'notice' }, 'No videos in this playlist.'),
-      pagination({ page, totalPages }, (p) => { location.hash = `#/playlist?id=${encodeURIComponent(id)}&page=${p}&pageSize=${pageSize}`; })
+  pagination({ page, totalPages }, (p) => { location.href = `/playlist/?id=${encodeURIComponent(id)}&page=${p}&pageSize=${pageSize}`; })
     )
   );
   lazyThumbs();
