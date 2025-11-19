@@ -1,0 +1,8 @@
+{% extends "layout.njk" %}
+{% block title %}Araglas — Playlists{% endblock %}
+{% block page_script %}
+<script type="module">
+  import { renderPlaylists } from '/pages/playlists.js';
+  renderPlaylists();
+</script>
+{% endblock %}

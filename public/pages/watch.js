@@ -78,6 +78,33 @@ export async function renderWatch() {
           h('button', { style: 'padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;', onclick: (e) => { e.preventDefault(); showPlaylistModal(video); } }, h('i', { class: 'fa-solid fa-list', style: 'margin-right:8px;' }), 'Add to Playlist'),
           h('button', { style: 'padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;', onclick: async (e) => { e.preventDefault(); await addFav({ relPath: video.relPath, name: video.name, channel: video.channel, channelId: channelId, mtime: video.mtime, size: video.size }); alert('Added to Favorites!'); } }, h('i', { class: 'fa-solid fa-heart', style: 'margin-right:8px;' }), 'Add to Favorites')
         )
+        // Metadata block (conditional if infoJson)
+        infoJson ? h('div', { style: 'display:flex;flex-wrap:wrap;gap:16px;margin:8px 0 24px 0;padding:12px 16px;background:var(--card);border-radius:12px;border:1px solid #222;' },
+          h('div', { style: 'display:flex;flex-direction:column;min-width:120px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Views'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, humanizeNumber(infoJson.view_count, ''))
+          ),
+          infoJson.like_count ? h('div', { style: 'display:flex;flex-direction:column;min-width:120px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Likes'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, humanizeNumber(infoJson.like_count, ''))
+          ) : null,
+          infoJson.channel_follower_count ? h('div', { style: 'display:flex;flex-direction:column;min-width:140px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Subscribers'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, humanizeNumber(infoJson.channel_follower_count, ''))
+          ) : null,
+          infoJson.upload_date ? h('div', { style: 'display:flex;flex-direction:column;min-width:140px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Uploaded'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, humanizeDate(infoJson.upload_date))
+          ) : null,
+          infoJson.webpage_url ? h('div', { style: 'display:flex;flex-direction:column;min-width:160px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'YouTube'),
+            h('a', { href: infoJson.webpage_url, target: '_blank', rel: 'noopener noreferrer', style: 'font-weight:700;font-size:1.05em;color:var(--brand);text-decoration:none;' }, 'Open ▶')
+          ) : null,
+          infoJson.duration ? h('div', { style: 'display:flex;flex-direction:column;min-width:100px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Duration'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, formatTimestamp(infoJson.duration))
+          ) : null
+        ) : null
       )
     )
   );

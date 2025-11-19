@@ -1,0 +1,8 @@
+{% extends "layout.njk" %}
+{% block title %}Araglas — Stats{% endblock %}
+{% block page_script %}
+<script type="module">
+  import { renderStats } from '/pages/stats.js';
+  renderStats();
+</script>
+{% endblock %}

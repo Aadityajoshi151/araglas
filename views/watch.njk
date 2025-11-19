@@ -1,0 +1,8 @@
+{% extends "layout.njk" %}
+{% block title %}Araglas — Watch{% endblock %}
+{% block page_script %}
+<script type="module">
+  import { renderWatch } from '/pages/watch.js';
+  renderWatch();
+</script>
+{% endblock %}

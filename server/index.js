@@ -8,6 +8,7 @@ import { scanLibrary } from "./scanner.js";
 import { ensureThumbsDir, makeThumb, thumbPathFor } from "./thumbs.js";
 import { matchesQuery, paginate, PAGE_SIZE_DEFAULT, hashPath } from "./utils.js";
 import mime from "mime";
+import nunjucks from "nunjucks";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -43,40 +44,28 @@ watcher.on("all", async () => {
 const app = express();
 app.disable("x-powered-by");
 app.use(morgan("tiny"));
-app.use(express.static(path.join(__dirname, "..", "public"), { maxAge: "1h", etag: true }));
+
+// Views (Nunjucks)
+const VIEWS_DIR = path.join(__dirname, "..", "views");
+nunjucks.configure(VIEWS_DIR, { autoescape: true, express: app });
+app.set("views", VIEWS_DIR);
+app.set("view engine", "njk");
 
 // Path-based pages (no hash routing)
 app.get('/', (req, res) => res.redirect('/home/'));
-app.get(['/home', '/home/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'home', 'index.html'));
-});
-app.get(['/channels', '/channels/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'channels', 'index.html'));
-});
-app.get(['/channel', '/channel/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'channel', 'index.html'));
-});
-app.get(['/search', '/search/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'search', 'index.html'));
-});
-app.get(['/playlists', '/playlists/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'playlists', 'index.html'));
-});
-app.get(['/playlist', '/playlist/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'playlist', 'index.html'));
-});
-app.get(['/favorites', '/favorites/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'favorites', 'index.html'));
-});
-app.get(['/moments', '/moments/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'moments', 'index.html'));
-});
-app.get(['/stats', '/stats/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'stats', 'index.html'));
-});
-app.get(['/watch', '/watch/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'watch', 'index.html'));
-});
+app.get(['/home', '/home/'], (req, res) => res.render('home.njk'));
+app.get(['/channels', '/channels/'], (req, res) => res.render('channels.njk'));
+app.get(['/channel', '/channel/'], (req, res) => res.render('channel.njk'));
+app.get(['/search', '/search/'], (req, res) => res.render('search.njk'));
+app.get(['/playlists', '/playlists/'], (req, res) => res.render('playlists.njk'));
+app.get(['/playlist', '/playlist/'], (req, res) => res.render('playlist.njk'));
+app.get(['/favorites', '/favorites/'], (req, res) => res.render('favorites.njk'));
+app.get(['/moments', '/moments/'], (req, res) => res.render('moments.njk'));
+app.get(['/stats', '/stats/'], (req, res) => res.render('stats.njk'));
+app.get(['/watch', '/watch/'], (req, res) => res.render('watch.njk'));
+
+// Static assets (served after view routes so SSR wins for page paths)
+app.use(express.static(path.join(__dirname, "..", "public"), { maxAge: "1h", etag: true }));
 
 // Serve actual videos directly with range support using express static under /video
 app.use("/video", express.static(LIBRARY_DIR, {
