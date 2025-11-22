@@ -8,6 +8,8 @@ import { showPlaylistModal } from '/core/components.js';
 
 export async function renderWatch() {
   const params = getQueryParams();
+  console.debug('[renderWatch] params:', params);
+  try {
   const relPath = params.relPath;
   const channel = params.channel;
   const title = params.title;
@@ -77,7 +79,7 @@ export async function renderWatch() {
           h('button', { style: 'padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;', onclick: async () => { const player = document.getElementById('main-video-player'); if (!player) return; const ts = Math.floor(player.currentTime); const title = prompt('Moment at '+ts+'s title:'); if (!title) return; await fetch('/api/moments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ relPath: video.relPath, timestamp: ts, title }) }); alert('Moment saved!'); } }, h('i', { class: 'fa-solid fa-hand-point-up', style: 'margin-right:8px;' }), 'Add Moment'),
           h('button', { style: 'padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;', onclick: (e) => { e.preventDefault(); showPlaylistModal(video); } }, h('i', { class: 'fa-solid fa-list', style: 'margin-right:8px;' }), 'Add to Playlist'),
           h('button', { style: 'padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;', onclick: async (e) => { e.preventDefault(); await addFav({ relPath: video.relPath, name: video.name, channel: video.channel, channelId: channelId, mtime: video.mtime, size: video.size }); alert('Added to Favorites!'); } }, h('i', { class: 'fa-solid fa-heart', style: 'margin-right:8px;' }), 'Add to Favorites')
-        )
+        ),
         // Metadata block (conditional if infoJson)
         infoJson ? h('div', { style: 'display:flex;flex-wrap:wrap;gap:16px;margin:8px 0 24px 0;padding:12px 16px;background:var(--card);border-radius:12px;border:1px solid #222;' },
           h('div', { style: 'display:flex;flex-direction:column;min-width:120px;' },
@@ -111,5 +113,14 @@ export async function renderWatch() {
 
   if (timestamp) {
     setTimeout(() => { const player = document.getElementById('main-video-player'); if (player) player.currentTime = timestamp; }, 600);
+  }
+  } catch (err) {
+    console.error('[renderWatch] error:', err);
+    try {
+      renderLayout(h('div', { class: 'notice' }, 'Failed to render watch page: ' + (err && err.message ? err.message : String(err))));
+    } catch (err2) {
+      // last resort: write to document
+      document.body.innerHTML = '<div style="padding:24px;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">Failed to render watch page.</div>';
+    }
   }
 }
