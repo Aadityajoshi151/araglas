@@ -2,12 +2,14 @@
 import { h, fmtSize, fmtDate, formatTitle, formatTimestamp } from '/core/helpers.js';
 import { api, videoUrl, channelCover } from '/core/api.js';
 import { renderLayout } from '/core/ui.js';
-import { parseHashParams } from '/core/router-hash.js';
+import { getQueryParams } from '/pages/_shared.js';
 import { addFav } from '/core/stores.js';
 import { showPlaylistModal } from '/core/components.js';
 
 export async function renderWatch() {
-  const params = parseHashParams();
+  const params = getQueryParams();
+  console.debug('[renderWatch] params:', params);
+  try {
   const relPath = params.relPath;
   const channel = params.channel;
   const title = params.title;
@@ -69,7 +71,7 @@ export async function renderWatch() {
         h('div', { style: 'font-size:1.6em;font-weight:700;margin-bottom:8px;word-break:break-word;overflow-wrap:break-word;white-space:pre-line;max-width:100%;text-align:left;' }, formatTitle(video.name)),
         h('div', { style: 'display:flex;align-items:center;gap:12px;margin-bottom:6px;' },
           h('img', { src: channelCover(channelCoverPath || video.relPath.split('/')[0]), style: 'width:36px;height:36px;border-radius:50%;object-fit:cover;background:#222;', onerror: function() { this.src = '/icons/araglas.png'; } }),
-          h('a', { href: `#/channel?id=${encodeURIComponent(channelId)}&name=${encodeURIComponent(channel)}`, style: 'color:var(--brand);font-weight:700;text-decoration:none;font-size:1.08em;' }, channel),
+          h('a', { href: `/channel/?id=${encodeURIComponent(channelId)}&name=${encodeURIComponent(channel)}`, style: 'color:var(--brand);font-weight:700;text-decoration:none;font-size:1.08em;' }, channel),
           h('span', { style: 'margin-left:8px;color:var(--muted);font-size:1em;' }, `|  ${fmtDate(video.mtime)}`)
         ),
         h('div', { style: 'color:var(--muted);font-size:1em;margin-bottom:8px;' }, `Size: ${fmtSize(video.size)}`),
@@ -77,12 +79,48 @@ export async function renderWatch() {
           h('button', { style: 'padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;', onclick: async () => { const player = document.getElementById('main-video-player'); if (!player) return; const ts = Math.floor(player.currentTime); const title = prompt('Moment at '+ts+'s title:'); if (!title) return; await fetch('/api/moments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ relPath: video.relPath, timestamp: ts, title }) }); alert('Moment saved!'); } }, h('i', { class: 'fa-solid fa-hand-point-up', style: 'margin-right:8px;' }), 'Add Moment'),
           h('button', { style: 'padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;', onclick: (e) => { e.preventDefault(); showPlaylistModal(video); } }, h('i', { class: 'fa-solid fa-list', style: 'margin-right:8px;' }), 'Add to Playlist'),
           h('button', { style: 'padding:10px 18px;border-radius:8px;background:var(--brand);color:var(--card);border:none;cursor:pointer;font-weight:700;font-size:1.08em;display:flex;align-items:center;gap:8px;', onclick: async (e) => { e.preventDefault(); await addFav({ relPath: video.relPath, name: video.name, channel: video.channel, channelId: channelId, mtime: video.mtime, size: video.size }); alert('Added to Favorites!'); } }, h('i', { class: 'fa-solid fa-heart', style: 'margin-right:8px;' }), 'Add to Favorites')
-        )
+        ),
+        // Metadata block (conditional if infoJson)
+        infoJson ? h('div', { style: 'display:flex;flex-wrap:wrap;gap:16px;margin:8px 0 24px 0;padding:12px 16px;background:var(--card);border-radius:12px;border:1px solid #222;' },
+          h('div', { style: 'display:flex;flex-direction:column;min-width:120px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Views'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, humanizeNumber(infoJson.view_count, ''))
+          ),
+          infoJson.like_count ? h('div', { style: 'display:flex;flex-direction:column;min-width:120px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Likes'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, humanizeNumber(infoJson.like_count, ''))
+          ) : null,
+          infoJson.channel_follower_count ? h('div', { style: 'display:flex;flex-direction:column;min-width:140px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Subscribers'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, humanizeNumber(infoJson.channel_follower_count, ''))
+          ) : null,
+          infoJson.upload_date ? h('div', { style: 'display:flex;flex-direction:column;min-width:140px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Uploaded'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, humanizeDate(infoJson.upload_date))
+          ) : null,
+          infoJson.webpage_url ? h('div', { style: 'display:flex;flex-direction:column;min-width:160px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'YouTube'),
+            h('a', { href: infoJson.webpage_url, target: '_blank', rel: 'noopener noreferrer', style: 'font-weight:700;font-size:1.05em;color:var(--brand);text-decoration:none;' }, 'Open ▶')
+          ) : null,
+          infoJson.duration ? h('div', { style: 'display:flex;flex-direction:column;min-width:100px;' },
+            h('span', { style: 'font-size:0.75em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;' }, 'Duration'),
+            h('span', { style: 'font-weight:700;font-size:1.05em;' }, formatTimestamp(infoJson.duration))
+          ) : null
+        ) : null
       )
     )
   );
 
   if (timestamp) {
     setTimeout(() => { const player = document.getElementById('main-video-player'); if (player) player.currentTime = timestamp; }, 600);
+  }
+  } catch (err) {
+    console.error('[renderWatch] error:', err);
+    try {
+      renderLayout(h('div', { class: 'notice' }, 'Failed to render watch page: ' + (err && err.message ? err.message : String(err))));
+    } catch (err2) {
+      // last resort: write to document
+      document.body.innerHTML = '<div style="padding:24px;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">Failed to render watch page.</div>';
+    }
   }
 }

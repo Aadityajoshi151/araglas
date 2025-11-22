@@ -21,8 +21,8 @@ export function cardVideo(v) {
   const formatted = formatTitle(v.name);
   const showTitle = formatted.length > 40 ? formatted.slice(0, 37) + '...' : formatted;
   const infoLine = [ v.channel || '', v.mtime ? fmtDate(v.mtime) : '' ].filter(Boolean).join(' | ');
-  function goToWatch(){ location.hash = `#/watch?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(formatTitle(v.name))}`; }
-  function refreshRoute(){ window.dispatchEvent(new Event('hashchange')); }
+  function goToWatch(){ location.href = `/watch/?relPath=${encodeURIComponent(v.relPath)}&channel=${encodeURIComponent(v.channel)}&title=${encodeURIComponent(formatTitle(v.name))}`; }
+  function refreshRoute(){ location.reload(); }
   function showDropdown(e){
     e.stopPropagation();
     const old = document.getElementById('video-dropdown');

@@ -8,6 +8,7 @@ import { scanLibrary } from "./scanner.js";
 import { ensureThumbsDir, makeThumb, thumbPathFor } from "./thumbs.js";
 import { matchesQuery, paginate, PAGE_SIZE_DEFAULT, hashPath } from "./utils.js";
 import mime from "mime";
+import nunjucks from "nunjucks";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -43,6 +44,27 @@ watcher.on("all", async () => {
 const app = express();
 app.disable("x-powered-by");
 app.use(morgan("tiny"));
+
+// Views (Nunjucks)
+const VIEWS_DIR = path.join(__dirname, "..", "views");
+nunjucks.configure(VIEWS_DIR, { autoescape: true, express: app });
+app.set("views", VIEWS_DIR);
+app.set("view engine", "njk");
+
+// Path-based pages (no hash routing)
+app.get('/', (req, res) => res.redirect('/home/'));
+app.get(['/home', '/home/'], (req, res) => res.render('home.njk'));
+app.get(['/channels', '/channels/'], (req, res) => res.render('channels.njk'));
+app.get(['/channel', '/channel/'], (req, res) => res.render('channel.njk'));
+app.get(['/search', '/search/'], (req, res) => res.render('search.njk'));
+app.get(['/playlists', '/playlists/'], (req, res) => res.render('playlists.njk'));
+app.get(['/playlist', '/playlist/'], (req, res) => res.render('playlist.njk'));
+app.get(['/favorites', '/favorites/'], (req, res) => res.render('favorites.njk'));
+app.get(['/moments', '/moments/'], (req, res) => res.render('moments.njk'));
+app.get(['/stats', '/stats/'], (req, res) => res.render('stats.njk'));
+app.get(['/watch', '/watch/'], (req, res) => res.render('watch.njk'));
+
+// Static assets (served after view routes so SSR wins for page paths)
 app.use(express.static(path.join(__dirname, "..", "public"), { maxAge: "1h", etag: true }));
 
 // Serve actual videos directly with range support using express static under /video
@@ -430,10 +452,8 @@ app.delete("/api/moments", express.json(), async (req, res) => {
   res.json({ ok: true });
 });
 
-// Fallback to SPA
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "public", "index.html"));
-});
+// Fallback to home for unknown paths under our domain (optional)
+app.get('*', (req, res) => res.redirect('/home/'));
 
 app.listen(PORT, () => {
   console.log(`Araglas running on http://localhost:${PORT}`);

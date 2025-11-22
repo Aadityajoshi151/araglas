@@ -1,0 +1,8 @@
+{% extends "layout.njk" %}
+{% block title %}Araglas — Home{% endblock %}
+{% block page_script %}
+<script type="module">
+  import { renderHome } from '/pages/home.js';
+  renderHome();
+</script>
+{% endblock %}

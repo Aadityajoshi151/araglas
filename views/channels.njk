@@ -1,0 +1,8 @@
+{% extends "layout.njk" %}
+{% block title %}Araglas — Channels{% endblock %}
+{% block page_script %}
+<script type="module">
+  import { renderChannels } from '/pages/channels.js';
+  renderChannels();
+</script>
+{% endblock %}

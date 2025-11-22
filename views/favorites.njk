@@ -1,0 +1,8 @@
+{% extends "layout.njk" %}
+{% block title %}Araglas — Favorites{% endblock %}
+{% block page_script %}
+<script type="module">
+  import { renderFavorites } from '/pages/favorites.js';
+  renderFavorites();
+</script>
+{% endblock %}

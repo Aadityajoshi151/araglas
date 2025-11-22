@@ -2,10 +2,10 @@
 import { h, formatTitle, formatTimestamp } from '/core/helpers.js';
 import { api } from '/core/api.js';
 import { renderLayout, pagination } from '/core/ui.js';
-import { parseHashParams } from '/core/router-hash.js';
+import { getQueryParams } from '/pages/_shared.js';
 
 export async function renderMoments() {
-  const params = parseHashParams();
+  const params = getQueryParams();
   const page = Number(params.page || 1);
   const pageSize = 15;
   const resp = await api(`/api/moments?page=${page}&pageSize=${pageSize}`);
@@ -26,20 +26,20 @@ export async function renderMoments() {
               h('button', { style: 'background:var(--brand);color:var(--card);border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-weight:700;', onclick: () => {
                 const channel = relPath.split('/')[0];
                 const title = formatTitle(relPath.split('/').pop());
-                location.hash = `#/watch?relPath=${encodeURIComponent(relPath)}&channel=${encodeURIComponent(channel)}&title=${encodeURIComponent(title)}&timestamp=${m.timestamp}`;
+                location.href = `/watch/?relPath=${encodeURIComponent(relPath)}&channel=${encodeURIComponent(channel)}&title=${encodeURIComponent(title)}&timestamp=${m.timestamp}`;
               } }, `Play @ ${formatTimestamp(m.timestamp)}`),
               h('div', { style: 'font-weight:600;' }, m.title),
               h('button', { style: 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;', title: 'Delete moment', onclick: async () => {
                 if (confirm('Delete this moment?')) {
                   await fetch('/api/moments', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ relPath, timestamp: m.timestamp }) });
-                  window.dispatchEvent(new Event('hashchange'));
+                  location.reload();
                 }
               } }, h('i', { class: 'fa-solid fa-trash' }))
             )
           )
         )
       ),
-      pagination({ page, totalPages }, (p) => { location.hash = `#/moments?page=${p}`; })
+  pagination({ page, totalPages }, (p) => { location.href = `/moments/?page=${p}`; })
     )
   );
 }

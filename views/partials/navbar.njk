@@ -1,0 +1,26 @@
+<nav class="navbar navbar-expand-lg">
+  <a class="navbar-brand" href="/">ARAGLAS</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fa-solid fa-bars"></i></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item"><a class="nav-link" href="/channels/">Channels</a></li>
+      <li class="nav-item"><a class="nav-link" href="/favorites/">Favorites</a></li>
+      <li class="nav-item"><a class="nav-link" href="/playlists/">Playlists</a></li>
+      <li class="nav-item"><a class="nav-link" href="/moments/">Moments</a></li>
+      <li class="nav-item"><a class="nav-link" href="/stats/">Stats</a></li>
+    </ul>
+    <form class="form-inline my-2 my-lg-0" onsubmit="event.preventDefault(); var q = this.querySelector('input').value.trim(); if(q) { window.location = '/search/?q=' + encodeURIComponent(q); } else { alert('Please enter a search query.'); } return false;">
+      <div class="navbar-search-wrap" style="display:flex;align-items:center;gap:10px;">
+        <input id="navbar-search" class="form-control mr-sm-2" type="search" placeholder="Search videos..." aria-label="Search videos...">
+      </div>
+      <button type="button" class="btn btn-outline-danger my-2 my-sm-0" style="font-size:1.2em;display:inline-flex;align-items:center;justify-content:center;margin-left:10px;" title="Surprise Me" onclick="window.surpriseMe && window.surpriseMe();">
+        <i class="fa-solid fa-face-surprise"></i>
+      </button>
+      <button type="button" class="btn btn-outline-danger my-2 my-sm-0" style="font-size:1.2em;display:inline-flex;align-items:center;justify-content:center;margin-left:8px;" title="Toggle Theme" onclick="window.toggleTheme && window.toggleTheme();">
+        <i class="fa-solid fa-circle-half-stroke"></i>
+      </button>
+    </form>
+  </div>
+</nav>
